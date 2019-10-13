@@ -1,0 +1,20 @@
+port: 3000
+domain: https://image.xingchenga.com
+uploadDir: /Users/xux/data/images
+maxAge: 10800
+defaultImg: default.png
+type: local
+jwt:
+  secret: 123456
+redis:
+  db: 1
+  addr: 127.0.0.1:6379
+  password:
+  poolSize: 110
+  expire: 10800 #默认 3小时
+aliyun:
+  region: xux
+  accessKeyId: xux
+  accessKeySecret: xux
+  bucket: xux
+  secure: true
