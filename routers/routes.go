@@ -15,7 +15,11 @@ func Register(echo *echo.Echo) {
 }
 
 func boss(group *echo.Group) {
-
+	group.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
+	}))
 	group.Use(middleware.JWTWithConfig(middleware.JWTConfig{
 		SigningKey:    []byte(conf.Config.JWT.Secret),
 		SigningMethod: conf.Config.JWT.Algorithm,
