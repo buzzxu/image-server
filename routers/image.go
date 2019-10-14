@@ -13,11 +13,15 @@ func upload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	/*values,err :=c.FormParams()
-	if err != nil {
-		return err
-	}*/
-	files := form.File["files"]
+	folder := c.FormValue("folder")
+	if folder == "" {
+		return E(c, ErrorOf(http.StatusBadRequest, "folder is nil"))
+	}
+	files, exists := form.File["file"]
+	if !exists {
+		return E(c, ErrorOf(http.StatusBadRequest, "file is nil"))
+	}
+	blobs := make([]*[]byte, len(files))
 	fileNames := make([]string, len(files))
 	for index, file := range files {
 		src, err := file.Open()
@@ -25,17 +29,20 @@ func upload(c echo.Context) error {
 			return err
 		}
 		defer src.Close()
-		buff := make([]byte, 512)
+		buff := make([]byte, file.Size)
 		_, err = src.Read(buff)
 		if utils.IfImage(buff) {
+			blobs[index] = &buff
 			fileNames[index] = file.Filename
 		} else {
 			return E(c, ErrorOf(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
 		}
 	}
-	storage.Storager.Upload(&storage.Upload{fileNames, form.Value})
-
-	return R(c, ResultOf(http.StatusOK, ""))
+	paths, err := storage.Storager.Upload(&storage.Upload{blobs, fileNames, folder, form.Value})
+	if err != nil {
+		return E(c, ErrorOf(http.StatusInternalServerError, err))
+	}
+	return R(c, ResultOf(http.StatusOK, paths))
 }
 
 func del(c echo.Context) error {
@@ -43,6 +50,24 @@ func del(c echo.Context) error {
 }
 
 func getImage(c echo.Context) error {
-	//c.Response().Write()
-	return c.String(http.StatusOK, c.Param("folder"))
+	//c.Response().Write() c.Request().URL.Path
+	url := c.Request().URL.Path
+	folder := url[7:len(url)]
+
+	download := &storage.Download{
+		Context:  c.Request().Context(),
+		Folder:   folder,
+		FileName: c.Param("filename"),
+		Size:     c.Param("size"),
+		Format:   c.Param("format"),
+		Line:     c.Param("Line") != "",
+		WebP:     c.Param("webp") != "",
+		Quality:  c.Param("quality"),
+	}
+	blob, contentType, err := storage.Storager.Download(download)
+	if err != nil {
+		c.Logger().Errorf("", err)
+		return err
+	}
+	return c.Blob(200, contentType, blob)
 }

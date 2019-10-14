@@ -10,10 +10,8 @@ func Register(echo *echo.Echo) {
 
 	bGroup := echo.Group("/b")
 	boss(bGroup)
-	println("GGGG")
 	gGroup := echo.Group("/images")
 	get(gGroup)
-	println("ggt")
 }
 
 func boss(group *echo.Group) {
@@ -29,6 +27,8 @@ func boss(group *echo.Group) {
 func get(group *echo.Group) {
 
 	group.Use(middleware.GzipWithConfig(middleware.GzipConfig{Level: 5}))
-	group.GET("/:folder+/:filename", getImage)
-	group.GET("/aaa", getImage)
+	group.GET("/:folder0/:filename", getImage)
+	group.GET("/:folder0/:folder1/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:folder3/:filename", getImage)
 }

@@ -10,8 +10,7 @@ import (
 	"runtime"
 )
 
-
-func main() {
+func init() {
 	storage.Register(func(t string) storage.Storage {
 		switch conf.Config.Type {
 		case "local":
@@ -21,6 +20,9 @@ func main() {
 		}
 		return &local.Local{}
 	})
+}
+
+func main() {
 
 	runtime.GOMAXPROCS(conf.Config.MaxProc)
 	storage.Storager.Init()

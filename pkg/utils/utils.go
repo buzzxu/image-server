@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/satori/go.uuid"
-	"image-server/pkg/conf"
 	"log"
 	"net/http"
 	"os"
@@ -41,16 +40,20 @@ func IfImage1(buff []byte) bool {
 	return false
 }
 
-func NewFileName(filename string) string {
-	extension := filepath.Ext(filename)
-	id := string(uuid.NewV4().Bytes())
-	dir, _ := filepath.Split(filename)
-	return filepath.Join(conf.Config.Storage, dir, id+extension)
+func NewFileName(folder string, filename string) string {
+	suffix := filepath.Ext(filename)
+	id := strings.ReplaceAll(uuid.NewV4().String(), "-", "")
+	return filepath.Join(folder, id+suffix)
 }
-func NewFileNameExt(filename string, extension string) string {
-	id := string(uuid.NewV4().Bytes())
-	dir, _ := filepath.Split(filename)
-	return filepath.Join(conf.Config.Storage, dir, id+"."+extension)
+func FileNameNewExt(filename string, extension string) string {
+	suffix := filepath.Ext(filename)
+	path := strings.TrimSuffix(filename, suffix)
+	return path + extension
+}
+
+func FilePathNewExt(folder string, suffix string) string {
+	id := strings.ReplaceAll(uuid.NewV4().String(), "-", "")
+	return filepath.Join(folder, id+"."+suffix)
 }
 
 func MkDirExist(path string) {

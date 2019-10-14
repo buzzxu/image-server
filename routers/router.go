@@ -19,7 +19,7 @@ type (
 		Code    int         `json:"code"`
 		Success bool        `json:"success"`
 		Message interface{} `json:"message,omitempty"`
-		Data    interface{} `json:"data,omitempty"`
+		Data    interface{} `json:"file,omitempty"`
 	}
 )
 

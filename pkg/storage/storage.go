@@ -14,7 +14,7 @@ type (
 
 		Upload(upload *Upload) ([]string, error)
 
-		Download(download *Download) ([]byte, error)
+		Download(download *Download) ([]byte, string, error)
 
 		Destory()
 	}
@@ -43,17 +43,23 @@ type (
 
 	//上传的参数
 	Upload struct {
-		Files  []string
-		Params map[string][]string
+		Files     []*[]byte
+		FileNames []string
+		Folder    string
+		Params    map[string][]string
 	}
 	//读取的参数
 	Download struct {
 		Params   map[string]string
 		Blod     []byte
-		Folders  []*string
+		Folder   string
 		FileName string
-		FileExt  string
 		Context  context.Context
+		Size     string
+		Format   string
+		Line     bool
+		WebP     bool
+		Quality  string
 	}
 )
 
@@ -61,10 +67,7 @@ var Storager Storage
 
 var NewStorage func(t string) Storage
 
-func init() {
-	Storager = NewStorage(conf.Config.Type)
-}
-
 func Register(ns func(t string) Storage) {
-	NewStorage = ns
+	println(ns)
+	Storager = ns(conf.Config.Type)
 }

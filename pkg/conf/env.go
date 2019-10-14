@@ -48,7 +48,6 @@ var Config *config
 func init() {
 	currentDir, _ := os.Getwd()
 	Config = load(currentDir + "/conf.yml")
-
 	log.Print(Config)
 }
 
