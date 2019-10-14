@@ -43,8 +43,6 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 				continue
 			}
 		}
-
-		mw.ReadImageBlob(*blob)
 		err := mwStoreFile(newFileName, blob, mw)
 		if err != nil {
 			return nil, err
@@ -71,8 +69,8 @@ func (image *Local) Destory() {
 }
 
 func generatorImage(blob *[]byte, fileName string, extension string, mw *imagick.MagickWand) (string, error) {
-	mw.ReadImageBlob(*blob)
 	nfs := utils.FileNameNewExt(fileName, extension)
+	mw.ReadImageBlob(*blob)
 	err := mw.WriteImage(filepath.Join(conf.Config.Storage, nfs))
 	mw.Clear()
 	if err != nil {
@@ -82,6 +80,7 @@ func generatorImage(blob *[]byte, fileName string, extension string, mw *imagick
 }
 
 func mwStoreFile(filename string, blob *[]byte, mw *imagick.MagickWand) error {
+	mw.ReadImageBlob(*blob)
 	err := mw.WriteImage(filepath.Join(conf.Config.Storage, filename))
 	mw.Clear()
 	return err
