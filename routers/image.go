@@ -3,9 +3,11 @@ package routers
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"image-server/pkg/conf"
 	"image-server/pkg/storage"
 	"image-server/pkg/utils"
 	"net/http"
+	"strconv"
 )
 
 func upload(c echo.Context) error {
@@ -38,9 +40,16 @@ func upload(c echo.Context) error {
 			return E(c, ErrorOf(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
 		}
 	}
-	paths, err := storage.Storager.Upload(&storage.Upload{blobs, fileNames, folder, form.Value})
+	paths, err := storage.Storager.Upload(&storage.Upload{
+		Files:     blobs,
+		FileNames: fileNames,
+		Folder:    folder,
+		Thumbnail: c.FormValue("thumbnail"),
+		Resize:    c.FormValue("resize"),
+		Params:    form.Value,
+	})
 	if err != nil {
-		return E(c, ErrorOf(http.StatusInternalServerError, err))
+		return err
 	}
 	return R(c, ResultOf(http.StatusOK, paths))
 }
@@ -50,24 +59,33 @@ func del(c echo.Context) error {
 }
 
 func getImage(c echo.Context) error {
-	//c.Response().Write() c.Request().URL.Path
 	url := c.Request().URL.Path
-	folder := url[7:len(url)]
-
+	path := url[7:]
+	_, webp := c.QueryParams()["webp"]
+	format := c.QueryParam("format")
 	download := &storage.Download{
-		Context:  c.Request().Context(),
-		Folder:   folder,
-		FileName: c.Param("filename"),
-		Size:     c.Param("size"),
-		Format:   c.Param("format"),
-		Line:     c.Param("Line") != "",
-		WebP:     c.Param("webp") != "",
-		Quality:  c.Param("quality"),
+		Context:   c.Request().Context(),
+		Path:      path,
+		FileName:  c.QueryParam("filename"),
+		Resize:    c.QueryParam("size"),
+		Format:    format,
+		Line:      c.QueryParam("Line") != "",
+		WebP:      webp,
+		Quality:   c.QueryParam("quality"),
+		Thumbnail: c.QueryParam("thumbnail"),
 	}
+	if format != "" {
+		c.QueryParams().Del("format")
+	}
+	if webp {
+		c.QueryParams().Del("webp")
+	}
+	download.HasParams = len(c.QueryParams()) > 0
 	blob, contentType, err := storage.Storager.Download(download)
 	if err != nil {
 		c.Logger().Errorf("", err)
 		return err
 	}
+	c.Response().Header().Set("Cache-Control", "public,max-age="+strconv.Itoa(conf.Config.MaxAge))
 	return c.Blob(200, contentType, blob)
 }

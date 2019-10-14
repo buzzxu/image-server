@@ -51,11 +51,6 @@ func FileNameNewExt(filename string, extension string) string {
 	return path + extension
 }
 
-func FilePathNewExt(folder string, suffix string) string {
-	id := strings.ReplaceAll(uuid.NewV4().String(), "-", "")
-	return filepath.Join(folder, id+"."+suffix)
-}
-
 func MkDirExist(path string) {
 	_, err := os.Stat(path)
 	if err != nil {

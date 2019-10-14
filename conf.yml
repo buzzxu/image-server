@@ -1,7 +1,7 @@
 port: 3000
 domain: https://image.xingchenga.com
 uploadDir: /Users/xux/data/images
-maxAge: 10800
+maxAge: 31536000
 defaultImg: default.png
 type: local
 jwt:
@@ -18,3 +18,8 @@ aliyun:
   accessKeySecret: xux
   bucket: xux
   secure: true
+watermark:
+  enable: true
+  color: red
+  gravity: center
+  text: jd.com

@@ -18,7 +18,7 @@ func (image *Aliyun) Upload(upload *storage.Upload) ([]string, error) {
 }
 
 func (image *Aliyun) Download(download *storage.Download) ([]byte, string, error) {
-	return nil, nil
+	return nil, "", nil
 }
 
 func (image *Aliyun) Destory() {

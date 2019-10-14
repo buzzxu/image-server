@@ -9,7 +9,7 @@ RUN go build
 FROM alpine
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache -U zlib libpng-dev libjpeg-turbo-dev libwebp-dev giflib-dev libx11-dev tzdata && \
+    apk add --no-cache -U zlib libpng-dev libjpeg-turbo-dev libwebp-dev giflib-dev libx11-dev tzdata xz-dev&& \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     mkdir -p /app && \
@@ -28,6 +28,7 @@ RUN cd && \
 	    --without-perl \
 	    --disable-openmp \
 	    --with-gvc=no \
+	    --enable-lzw \
 	    --disable-docs && \
 	make -j$(nproc) && make install && \
 	ldconfig /usr/local/lib && \

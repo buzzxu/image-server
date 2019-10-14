@@ -2,7 +2,10 @@ package storage
 
 import (
 	"context"
+	"github.com/labstack/echo/v4"
 	"image-server/pkg/conf"
+	"strconv"
+	"strings"
 )
 
 type (
@@ -46,20 +49,25 @@ type (
 		Files     []*[]byte
 		FileNames []string
 		Folder    string
+		Thumbnail string
+		Resize    string
 		Params    map[string][]string
 	}
 	//读取的参数
 	Download struct {
-		Params   map[string]string
-		Blod     []byte
-		Folder   string
-		FileName string
-		Context  context.Context
-		Size     string
-		Format   string
-		Line     bool
-		WebP     bool
-		Quality  string
+		Params    map[string]string
+		Blod      []byte
+		Path      string
+		FileName  string
+		Context   context.Context
+		HasParams bool
+		Resize    string
+		Format    string
+		Line      bool
+		WebP      bool
+		Quality   string
+		Thumbnail string
+		Interlace string
 	}
 )
 
@@ -70,4 +78,26 @@ var NewStorage func(t string) Storage
 func Register(ns func(t string) Storage) {
 	println(ns)
 	Storager = ns(conf.Config.Type)
+}
+
+func (d *Download) Resize2WidthAndHeight() (uint, uint, error) {
+	return ParserSize(d.Resize)
+}
+func (d *Download) Thumbnail2WidthAndHeight() (uint, uint, error) {
+	return ParserSize(d.Thumbnail)
+}
+
+func ParserSize(size string) (uint, uint, error) {
+	resize := strings.Split(size, "*")
+	swidth, err := strconv.ParseUint(resize[0], 10, 64)
+	if err != nil {
+		return 0, 0, echo.NewHTTPError(400, "width is not int")
+	}
+	sheight, err := strconv.ParseUint(resize[1], 10, 64)
+	if err != nil {
+		return 0, 0, echo.NewHTTPError(400, "height is not int")
+	}
+	width := uint(swidth)
+	height := uint(sheight)
+	return width, height, nil
 }
