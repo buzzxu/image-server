@@ -35,7 +35,7 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	defer mw.Destroy()
 	err := utils.MkDirExist(upload.Folder)
 	if err != nil {
-		return "", echo.ErrInternalServerError
+		return nil, echo.ErrInternalServerError
 	}
 	for index, blob := range upload.Files {
 		webp, exist := upload.Params["webp"]
