@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"errors"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/gographics/imagick.v3/imagick"
@@ -42,7 +41,7 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	ch := make(chan string, len(upload.FileNames))
 	for index, blob := range upload.Files {
 		//上传图片到本地硬盘
-		go uploadToLocalHard(upload.FileNames[index], blob, upload, mw, ch, err)
+		go uploadToLocalHard(upload.FileNames[index], blob, upload, mw, ch)
 	}
 	if err != nil {
 		return nil, err
@@ -120,20 +119,12 @@ func (image *Local) Destory() {
 	imagick.Terminate()
 }
 
-func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw *imagick.MagickWand, ch chan<- string, err error) {
+func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw *imagick.MagickWand, ch chan<- string) {
 	webp, exist := upload.Params["webp"]
 	newFileName := utils.NewFileName(upload.Folder, fileName)
-	if strings.Index(fileName, "austin") >= 0 {
-		err = errors.New(">>>>")
-		ch <- ""
-		return
-	}
 	if exist {
 		var webpPath string
-		webpPath, err = generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
-		if err != nil {
-			return
-		}
+		webpPath, _ = generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
 		//如果只是转换图片类型操作就不需要保存原图
 		if webp[0] == "convert" {
 			newFileName = webpPath
@@ -141,14 +132,12 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 			return
 		}
 	}
-	err = mwStoreFile(newFileName, upload.Resize, blob, mw)
-	if err != nil {
-		return
-	}
-
+	//生成缩略图
 	if upload.Thumbnail != "" {
 		generatorThumbnailImage(blob, newFileName, upload.Thumbnail, mw)
 	}
+	//保存原图
+	mwStoreFile(newFileName, upload.Resize, blob, mw)
 	ch <- newFileName
 	return
 }
