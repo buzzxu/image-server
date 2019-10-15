@@ -103,7 +103,7 @@ func load(file string) *config {
 	return c
 }
 
-func (e *watermark) GravityType() imagick.GravityType {
+func (e watermark) GravityType() imagick.GravityType {
 	return e.gravityType
 }
 func (e *watermark) convertGravityType() {

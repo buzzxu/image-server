@@ -2,6 +2,7 @@ package routers
 
 import (
 	"fmt"
+	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"image-server/pkg/conf"
 	"image-server/pkg/storage"
@@ -17,12 +18,13 @@ func upload(c echo.Context) error {
 	}
 	folder := c.FormValue("folder")
 	if folder == "" {
-		return E(c, ErrorOf(http.StatusBadRequest, "folder is nil"))
+		return E(c, types.NewHttpError(http.StatusBadRequest, "folder is nil"))
 	}
 	files, exists := form.File["file"]
 	if !exists {
-		return E(c, ErrorOf(http.StatusBadRequest, "file is nil"))
+		return E(c, types.NewHttpError(http.StatusBadRequest, "file is nil"))
 	}
+
 	blobs := make([]*[]byte, len(files))
 	fileNames := make([]string, len(files))
 	for index, file := range files {
@@ -37,7 +39,7 @@ func upload(c echo.Context) error {
 			blobs[index] = &buff
 			fileNames[index] = file.Filename
 		} else {
-			return E(c, ErrorOf(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
+			return E(c, types.NewHttpError(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
 		}
 	}
 	paths, err := storage.Storager.Upload(&storage.Upload{
@@ -49,13 +51,13 @@ func upload(c echo.Context) error {
 		Params:    form.Value,
 	})
 	if err != nil {
-		return err
+		return jsonErrorHandler(err, c)
 	}
-	return R(c, ResultOf(http.StatusOK, paths))
+	return R(c, paths)
 }
 
 func del(c echo.Context) error {
-	return R(c, ResultOf(http.StatusOK, ""))
+	return RNullData(c)
 }
 
 func getImage(c echo.Context) error {
@@ -87,5 +89,6 @@ func getImage(c echo.Context) error {
 		return err
 	}
 	c.Response().Header().Set("Cache-Control", "public,max-age="+strconv.Itoa(conf.Config.MaxAge))
+	c.Response().Header().Set("Content-Length", strconv.Itoa(len(blob)))
 	return c.Blob(200, contentType, blob)
 }

@@ -1,7 +1,7 @@
 package imagemagick
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/buzzxu/boys/types"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
 	"image-server/pkg/storage"
@@ -68,11 +68,10 @@ func zoom(size string, mgw *imagick.MagickWand, call func(width uint, height uin
 		height = mgw.GetImageHeight()
 		val, err := strconv.Atoi(size[0:strings.IndexAny(size, "%")])
 		if err != nil {
-			return echo.NewHTTPError(400, "format error! ex.50%")
+			return types.NewError(400, "format error! ex.50%")
 		}
 		v := uint(100 / val)
 		return call(width/v, height/v)
-	} else {
-		return echo.ErrBadRequest
 	}
+	return nil
 }

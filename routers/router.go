@@ -1,25 +1,17 @@
 package routers
 
 import (
+	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"net/http"
 )
 
 type (
-	// Error 异常结构
-	Error struct {
-		Code    int         `json:"code"`
-		Key     string      `json:"error,omitempty"`
-		Success bool        `json:"success"`
-		Message interface{} `json:"message"`
-	}
-	// Result 返回结果
 	Result struct {
-		Code    int         `json:"code"`
-		Success bool        `json:"success"`
-		Message interface{} `json:"message,omitempty"`
-		Data    interface{} `json:"file,omitempty"`
+		*types.Result
+		File []string `json:"file"`
 	}
 )
 
@@ -35,25 +27,29 @@ func New() *echo.Echo {
 }
 
 // JSON 输出json
-func R(c echo.Context, result *Result) error {
-	return c.JSON(result.Code, result)
+func R(c echo.Context, data []string) error {
+	return c.JSON(http.StatusOK, &Result{Result: &types.Result{Code: http.StatusOK, Success: true}, File: data})
 }
-func E(c echo.Context, result *Error) error {
+func RNullData(c echo.Context) error {
+	return c.JSON(http.StatusOK, types.ResultNilData(http.StatusOK))
+}
+func E(c echo.Context, result *types.Error) error {
 	return c.JSON(result.Code, result)
 }
 
-// ResultOf 构造Result
-func ResultOf(code int, data interface{}) *Result {
-	return &Result{
-		Code:    code,
-		Success: true,
-		Data:    data,
+func jsonErrorHandler(err error, c echo.Context) error {
+	var (
+		code = http.StatusInternalServerError
+		erro interface{}
+	)
+	if e, ok := err.(*types.Error); ok {
+		code = e.Code
+		erro = e
+	} else if e, ok := err.(*echo.HTTPError); ok {
+		code = e.Code
+		erro = types.NewError(e.Code, e.Error())
+	} else {
+		erro = types.ErrorOf(err)
 	}
-}
-func ErrorOf(code int, message interface{}) *Error {
-	return &Error{
-		Code:    code,
-		Success: false,
-		Message: message,
-	}
+	return c.JSON(code, erro)
 }

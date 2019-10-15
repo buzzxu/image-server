@@ -2,7 +2,7 @@ package local
 
 import (
 	"context"
-	"errors"
+	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
@@ -30,14 +30,15 @@ func (image *Local) Check(params map[string]string) {
 }
 
 func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
+	err := utils.MkDirExist(filepath.Join(conf.Config.Storage, upload.Folder))
+	if err != nil {
+		return nil, err
+	}
 	paths := make([]string, len(upload.Files))
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
-	err := utils.MkDirExist(upload.Folder)
-	if err != nil {
-		return nil, echo.ErrInternalServerError
-	}
 	for index, blob := range upload.Files {
+
 		webp, exist := upload.Params["webp"]
 		newFileName := utils.NewFileName(upload.Folder, upload.FileNames[index])
 		if exist {
@@ -89,6 +90,8 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 
 	err = mw.ReadImageBlob(blob)
 	//质量
+	//默认75
+	mw.SetCompressionQuality(75)
 	if download.Quality != "" {
 		quality, err := strconv.ParseUint(download.Quality, 10, 64)
 		if err != nil {
@@ -97,18 +100,14 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 		if quality < 100 {
 			mw.SetCompressionQuality(uint(quality))
 		}
-	} else {
-		//默认75
-		mw.SetCompressionQuality(75)
 	}
+
 	// 缩放
-	err = imagemagick.Resize(mw, download.Thumbnail)
-	if err != nil {
+	if err = imagemagick.Resize(mw, download.Thumbnail); err != nil {
 		return nil, "", err
 	}
 	//缩略图
-	err = imagemagick.Thumbnail(mw, download.Thumbnail)
-	if err != nil {
+	if err = imagemagick.Thumbnail(mw, download.Thumbnail); err != nil {
 		return nil, "", err
 	}
 	//格式转换
@@ -118,13 +117,13 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 			return nil, "", err
 		}
 	}
+	mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
 	if download.Interlace != "" {
 		if download.Interlace == "plane" {
 			mw.SetInterlaceScheme(imagick.INTERLACE_PLANE)
 		}
-	} else {
-		mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
 	}
+
 	mw.StripImage()
 	blob = mw.GetImageBlob()
 	return blob, http.DetectContentType(blob), err
@@ -132,6 +131,10 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 
 func (image *Local) Destory() {
 	imagick.Terminate()
+}
+
+func uploadToLocalHard(blob *[]byte, upload *storage.Upload, mw *imagick.MagickWand) (string, error) {
+	return "", nil
 }
 
 func generatorImage(blob *[]byte, fileName string, extension string, resize string, mw *imagick.MagickWand) (string, error) {
@@ -194,7 +197,7 @@ func readFile(ctx context.Context, filename string) ([]byte, error) {
 	var (
 		blob []byte
 		err  error
-		done chan int = make(chan int)
+		done chan int = make(chan int) //make(chan int,runtime.GOMAXPROCS(conf.Config.MaxProc))
 	)
 	go func() {
 		blob, err = ioutil.ReadFile(filepath.Join(conf.Config.Storage, filename))
@@ -202,7 +205,7 @@ func readFile(ctx context.Context, filename string) ([]byte, error) {
 	}()
 	select {
 	case <-ctx.Done():
-		return nil, errors.New("context timeout")
+		return nil, types.ErrNotFound
 	case <-done:
 		return blob, err
 	}
