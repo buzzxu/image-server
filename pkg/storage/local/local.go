@@ -43,9 +43,6 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 		//上传图片到本地硬盘
 		go uploadToLocalHard(upload.FileNames[index], blob, upload, mw, ch)
 	}
-	if err != nil {
-		return nil, err
-	}
 	for i := 0; i < numfiles; i++ {
 		paths[i] = <-ch
 	}
