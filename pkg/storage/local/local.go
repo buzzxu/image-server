@@ -38,13 +38,37 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	paths := make([]string, numfiles)
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
-	ch := make(chan string, len(upload.FileNames))
+	/*ch := make(chan string, len(upload.FileNames))
 	for index, blob := range upload.Files {
 		//上传图片到本地硬盘
 		go uploadToLocalHard(upload.FileNames[index], blob, upload, mw, ch)
 	}
 	for i := 0; i < numfiles; i++ {
 		paths[i] = <-ch
+	}*/
+	for index, blob := range upload.Files {
+		webp, exist := upload.Params["webp"]
+		newFileName := utils.NewFileName(upload.Folder, upload.FileNames[index])
+		if exist {
+			webpPath, err := generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
+			if err != nil {
+				return nil, err
+			}
+			//如果只是转换图片类型操作就不需要保存原图
+			if webp[0] == "convert" {
+				newFileName = webpPath
+				paths[index] = newFileName
+				continue
+			}
+		}
+		if err = mwStoreFile(newFileName, upload.Resize, blob, mw); err != nil {
+			return nil, err
+		}
+
+		if upload.Thumbnail != "" {
+			generatorThumbnailImage(blob, newFileName, upload.Thumbnail, mw)
+		}
+		paths[index] = newFileName
 	}
 	return paths, nil
 }
