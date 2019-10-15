@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/gographics/imagick.v3/imagick"
@@ -34,34 +35,20 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	paths := make([]string, len(upload.Files))
+	numfiles := len(upload.FileNames)
+	paths := make([]string, numfiles)
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
+	ch := make(chan string, len(upload.FileNames))
 	for index, blob := range upload.Files {
-
-		webp, exist := upload.Params["webp"]
-		newFileName := utils.NewFileName(upload.Folder, upload.FileNames[index])
-		if exist {
-			webpPath, err := generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
-			if err != nil {
-				return nil, err
-			}
-			//如果只是转换图片类型操作就不需要保存原图
-			if webp[0] == "convert" {
-				newFileName = webpPath
-				paths[index] = newFileName
-				continue
-			}
-		}
-		err := mwStoreFile(newFileName, upload.Resize, blob, mw)
-		if err != nil {
-			return nil, err
-		}
-
-		if upload.Thumbnail != "" {
-			generatorThumbnailImage(blob, newFileName, upload.Thumbnail, mw)
-		}
-		paths[index] = newFileName
+		//上传图片到本地硬盘
+		go uploadToLocalHard(upload.FileNames[index], blob, upload, mw, ch, err)
+	}
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < numfiles; i++ {
+		paths[i] = <-ch
 	}
 	return paths, nil
 }
@@ -133,8 +120,37 @@ func (image *Local) Destory() {
 	imagick.Terminate()
 }
 
-func uploadToLocalHard(blob *[]byte, upload *storage.Upload, mw *imagick.MagickWand) (string, error) {
-	return "", nil
+func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw *imagick.MagickWand, ch chan<- string, err error) {
+	webp, exist := upload.Params["webp"]
+	newFileName := utils.NewFileName(upload.Folder, fileName)
+	if strings.Index(fileName, "austin") >= 0 {
+		err = errors.New(">>>>")
+		ch <- ""
+		return
+	}
+	if exist {
+		var webpPath string
+		webpPath, err = generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
+		if err != nil {
+			return
+		}
+		//如果只是转换图片类型操作就不需要保存原图
+		if webp[0] == "convert" {
+			newFileName = webpPath
+			ch <- newFileName
+			return
+		}
+	}
+	err = mwStoreFile(newFileName, upload.Resize, blob, mw)
+	if err != nil {
+		return
+	}
+
+	if upload.Thumbnail != "" {
+		generatorThumbnailImage(blob, newFileName, upload.Thumbnail, mw)
+	}
+	ch <- newFileName
+	return
 }
 
 func generatorImage(blob *[]byte, fileName string, extension string, resize string, mw *imagick.MagickWand) (string, error) {
