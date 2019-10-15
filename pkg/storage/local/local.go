@@ -33,6 +33,10 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	paths := make([]string, len(upload.Files))
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
+	err := utils.MkDirExist(upload.Folder)
+	if err != nil {
+		return "", echo.ErrInternalServerError
+	}
 	for index, blob := range upload.Files {
 		webp, exist := upload.Params["webp"]
 		newFileName := utils.NewFileName(upload.Folder, upload.FileNames[index])

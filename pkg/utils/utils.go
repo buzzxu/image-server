@@ -51,22 +51,21 @@ func FileNameNewExt(filename string, extension string) string {
 	return path + extension
 }
 
-func MkDirExist(path string) {
+func MkDirExist(path string) error {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsExist(err) {
 			log.Println(fmt.Sprintf("目录:[%s]已存在,无需创建", path))
-			return
+			return nil
 		}
 		if os.IsNotExist(err) {
 			log.Println(fmt.Sprintf("目录:[%s]不已存在,需创建", path))
 			err := os.Mkdir(path, os.ModePerm)
 			if err != nil {
 				log.Fatal(fmt.Sprintf("目录:[%s]创建失败", path))
-			} else {
-				log.Println(fmt.Sprintf("目录:[%s]创建成功", path))
+				return err
 			}
-			return
+			return nil
 		}
 	}
 
