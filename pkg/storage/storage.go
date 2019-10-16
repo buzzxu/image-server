@@ -19,6 +19,8 @@ type (
 
 		Download(download *Download) ([]byte, string, error)
 
+		Delete(del *Delete) (bool, error)
+
 		Destory()
 	}
 
@@ -46,8 +48,8 @@ type (
 
 	//上传的参数
 	Upload struct {
-		Files     []*[]byte
-		FileNames []string
+		Blobs     []*[]byte
+		Keys      []string
 		Folder    string
 		Thumbnail string
 		Resize    string
@@ -68,6 +70,11 @@ type (
 		Quality   string
 		Thumbnail string
 		Interlace string
+	}
+	Delete struct {
+		Keys    []string
+		Context context.Context
+		Logger  echo.Logger
 	}
 )
 

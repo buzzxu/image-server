@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 type Local struct {
@@ -139,9 +138,6 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 }
 
 func (image *Local) Delete(del *storage.Delete) (bool, error) {
-	var wg sync.WaitGroup
-	wg.Add(len(del.Keys))
-
 	for _, key := range del.Keys {
 		//验证是否有此图片
 		if blob, err := readFile(del.Context, key); err != nil {
