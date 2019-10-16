@@ -38,4 +38,5 @@ func images(group *echo.Group) {
 	group.GET("/:folder0/:folder1/:folder2/:filename", getImage)
 	group.GET("/:folder0/:folder1/:folder2/:folder3/:filename", getImage)
 	group.POST("/upload", upload, jwt)
+	group.DELETE("/delete", del, jwt)
 }

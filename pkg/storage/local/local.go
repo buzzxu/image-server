@@ -11,9 +11,11 @@ import (
 	"image-server/pkg/utils"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Local struct {
@@ -34,7 +36,7 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	numfiles := len(upload.FileNames)
+	numfiles := len(upload.Blobs)
 	paths := make([]string, numfiles)
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
@@ -46,11 +48,11 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	for i := 0; i < numfiles; i++ {
 		paths[i] = <-ch
 	}*/
-	for index, blob := range upload.Files {
+	for index := 0; index < numfiles; index++ {
 		webp, exist := upload.Params["webp"]
-		newFileName := utils.NewFileName(upload.Folder, upload.FileNames[index])
+		newFileName := utils.NewFileName(upload.Folder, upload.Keys[index])
 		if exist {
-			webpPath, err := generatorImage(blob, newFileName, ".webp", upload.Resize, mw)
+			webpPath, err := generatorImage(upload.Blobs[index], newFileName, ".webp", upload.Resize, mw)
 			if err != nil {
 				return nil, err
 			}
@@ -61,12 +63,12 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 				continue
 			}
 		}
-		if err = mwStoreFile(newFileName, upload.Resize, blob, mw); err != nil {
+		if err = mwStoreFile(newFileName, upload.Resize, upload.Blobs[index], mw); err != nil {
 			return nil, err
 		}
 
 		if upload.Thumbnail != "" {
-			generatorThumbnailImage(blob, newFileName, upload.Thumbnail, mw)
+			generatorThumbnailImage(upload.Blobs[index], newFileName, upload.Thumbnail, mw)
 		}
 		paths[index] = newFileName
 	}
@@ -136,6 +138,36 @@ func (image *Local) Download(download *storage.Download) ([]byte, string, error)
 	return blob, http.DetectContentType(blob), err
 }
 
+func (image *Local) Delete(del *storage.Delete) (bool, error) {
+	var wg sync.WaitGroup
+	wg.Add(len(del.Keys))
+
+	for _, key := range del.Keys {
+		//验证是否有此图片
+		if blob, err := readFile(del.Context, key); err != nil {
+			del.Logger.Errorf("文件:%s,删除失败,原因:无法获取图片信息", key)
+			continue
+		} else {
+			if utils.IfImage(blob) {
+				suffix := filepath.Ext(key)
+				path := strings.TrimSuffix(key, suffix)
+				files, err := filepath.Glob(filepath.Join(conf.Config.Storage, path) + "*")
+				if err != nil {
+					del.Logger.Errorf("路径:%s,查找文件失败,原因:%s", path, err.Error())
+					continue
+				}
+				for _, f := range files {
+					if err := os.Remove(f); err != nil {
+						del.Logger.Errorf("文件:%s,删除失败,原因:%s", f, err.Error()) /**/
+					}
+				}
+			} else {
+				del.Logger.Warnf("文件:%s,删除失败,原因:非图片无法删除", key)
+			}
+		}
+	}
+	return true, nil
+}
 func (image *Local) Destory() {
 	imagick.Terminate()
 }

@@ -43,8 +43,8 @@ func upload(c echo.Context) error {
 		}
 	}
 	paths, err := storage.Storager.Upload(&storage.Upload{
-		Files:     blobs,
-		FileNames: fileNames,
+		Blobs:     blobs,
+		Keys:      fileNames,
 		Folder:    folder,
 		Thumbnail: c.FormValue("thumbnail"),
 		Resize:    c.FormValue("resize"),
@@ -57,6 +57,17 @@ func upload(c echo.Context) error {
 }
 
 func del(c echo.Context) error {
+	files := c.QueryParams()["file"]
+	if files == nil {
+		return jsonErrorHandler(types.NewHttpError(http.StatusBadRequest, "请传入file参数"), c)
+	}
+	if _, err := storage.Storager.Delete(&storage.Delete{
+		Keys:    files,
+		Context: c.Request().Context(),
+		Logger:  c.Logger(),
+	}); err != nil {
+		return jsonErrorHandler(err, c)
+	}
 	return RNullData(c)
 }
 

@@ -23,6 +23,10 @@ func (image *Aliyun) Download(download *storage.Download) ([]byte, string, error
 	return nil, "", nil
 }
 
+func (image *Aliyun) Delete(del *storage.Delete) (bool, error) {
+	return false, nil
+}
+
 func (image *Aliyun) Destory() {
 
 }
