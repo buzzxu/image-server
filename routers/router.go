@@ -21,7 +21,6 @@ func New() *echo.Echo {
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
 	Register(e)
 	return e
 }

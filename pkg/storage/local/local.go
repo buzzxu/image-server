@@ -25,7 +25,8 @@ type Local struct {
 }
 
 const (
-	KEY_IMG_DEF = "img:default"
+	key_img_default = "img:default"
+	key_prefix      = "notfound:"
 )
 
 func (image *Local) Init() {
@@ -109,10 +110,10 @@ func (image *Local) Destory() {
 }
 
 func getDefaultImag() *[]byte {
-	blob, err := cache.Get(KEY_IMG_DEF).Bytes()
+	blob, err := cache.Get(key_img_default).Bytes()
 	if err != nil {
 		loadDefaultImg()
-		blob, err = cache.Get(KEY_IMG_DEF).Bytes()
+		blob, err = cache.Get(key_img_default).Bytes()
 	}
 	return &blob
 }
@@ -171,7 +172,7 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 
 func loadDefaultImg() {
 	if blob, error := ioutil.ReadFile(filepath.Join(conf.Config.Storage, conf.Config.DefaultImg)); error == nil {
-		cache.Set(KEY_IMG_DEF, blob, 0)
+		cache.Set(key_img_default, blob, 0)
 	} else {
 		log.Fatalf("读取默认图片[%s]失败,无法缓存图片", conf.Config.DefaultImg)
 	}
@@ -185,6 +186,11 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		mw   *imagick.MagickWand
 	)
 	key := strs.HashSHA1(download.URL)
+	keyNotfound := key_prefix + key
+	//如果不存在此图像 直接返回404
+	if cache.Exists(keyNotfound).Val() > 0 {
+		return getDefaultImag(), types.ErrNotFound
+	}
 	//从缓存中获取图像
 	blob, err = cache.Get(key).Bytes()
 	if err != nil {
@@ -195,6 +201,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 			// read image from local hard driver
 			blob, err = readFile(download.Context, download.Path)
 			if err != nil {
+				cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
 				return getDefaultImag(), types.ErrNotFound
 			}
 		}
@@ -207,12 +214,12 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		mw = imagick.NewMagickWand()
 		defer mw.Destroy()
 		if blob == nil {
-			err = mw.ReadImage(filepath.Join(conf.Config.DefaultImg, download.Path))
+			if err = mw.ReadImage(filepath.Join(conf.Config.DefaultImg, download.Path)); err != nil {
+				cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
+				return getDefaultImag(), types.ErrNotFound
+			}
 		} else {
-			err = mw.ReadImageBlob(blob)
-		}
-		if err != nil {
-			return getDefaultImag(), types.ErrNotFound
+			mw.ReadImageBlob(blob)
 		}
 		//质量
 		//默认75

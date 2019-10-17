@@ -47,6 +47,9 @@ func NewFileName(folder string, filename string) string {
 }
 func FileNameNewExt(filename string, extension string) string {
 	suffix := filepath.Ext(filename)
+	if suffix == extension {
+		return filename
+	}
 	path := strings.TrimSuffix(filename, suffix)
 	return path + extension
 }

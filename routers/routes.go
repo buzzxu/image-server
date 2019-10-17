@@ -26,7 +26,7 @@ var cors = middleware.CORSWithConfig(middleware.CORSConfig{
 
 func boss(group *echo.Group) {
 	group.Use(cors, jwt)
-	group.POST("/upload", upload)
+	group.POST("/upload", upload, middleware.BodyLimit(conf.Config.BodyLimit))
 	group.DELETE("/delete", del)
 }
 
@@ -37,6 +37,6 @@ func images(group *echo.Group) {
 	group.GET("/:folder0/:folder1/:filename", getImage)
 	group.GET("/:folder0/:folder1/:folder2/:filename", getImage)
 	group.GET("/:folder0/:folder1/:folder2/:folder3/:filename", getImage)
-	group.POST("/upload", upload, jwt)
+	group.POST("/upload", upload, jwt, middleware.BodyLimit(conf.Config.BodyLimit))
 	group.DELETE("/delete", del, jwt)
 }

@@ -4,13 +4,24 @@ import (
 	"fmt"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/bytes"
 	"image-server/pkg/conf"
 	"image-server/pkg/storage"
 	"image-server/pkg/utils"
+	"log"
 	"net/http"
 	"strconv"
 )
 
+var limit int64
+
+func init() {
+	size, err := bytes.Parse(conf.Config.SizeLimit)
+	if err != nil {
+		log.Fatalf("图片限制尺寸值[%s]解析失败", conf.Config.SizeLimit)
+	}
+	limit = size
+}
 func upload(c echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -29,10 +40,13 @@ func upload(c echo.Context) error {
 	fileNames := make([]string, len(files))
 	for index, file := range files {
 		src, err := file.Open()
+		defer src.Close()
 		if err != nil {
 			return err
 		}
-		defer src.Close()
+		if file.Size > limit {
+			return E(c, types.NewHttpError(http.StatusRequestEntityTooLarge, conf.Config.SizeLimit))
+		}
 		buff := make([]byte, file.Size)
 		_, err = src.Read(buff)
 		if utils.IfImage(buff) {

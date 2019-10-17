@@ -18,6 +18,8 @@ type (
 		Domain     string     `yaml:"domain",omitempty`
 		Storage    string     `yaml:"uploadDir"`
 		MaxAge     int        `yaml:"maxAge"`
+		BodyLimit  string     `yaml:"bodyLimit"`
+		SizeLimit  string     `yaml:"sizeLimit"`
 		DefaultImg string     `yaml:"defaultImg"`
 		Type       string     `yaml:"type"`
 		JWT        *jwt       `yaml:"jwt"`
@@ -71,6 +73,8 @@ func load(file string) *config {
 		Port:       3000,
 		Storage:    "/data/images",
 		MaxAge:     31536000,
+		BodyLimit:  "5M",
+		SizeLimit:  "500K",
 		DefaultImg: "default.png",
 		Type:       "local",
 		JWT:        &jwt{Secret: "123456", Algorithm: "HS512"},
