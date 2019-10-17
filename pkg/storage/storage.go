@@ -17,7 +17,7 @@ type (
 
 		Upload(upload *Upload) ([]string, error)
 
-		Download(download *Download) ([]byte, string, error)
+		Download(download *Download) (*[]byte, string, error)
 
 		Delete(del *Delete) (bool, error)
 
@@ -61,6 +61,8 @@ type (
 		Blod      []byte
 		Path      string
 		FileName  string
+		URL       string
+		Logger    echo.Logger
 		Context   context.Context
 		HasParams bool
 		Resize    string

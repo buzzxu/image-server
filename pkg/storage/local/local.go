@@ -2,8 +2,10 @@ package local
 
 import (
 	"context"
+	"github.com/buzzxu/boys/common/strs"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
 	"image-server/pkg/imagemagick"
@@ -22,8 +24,15 @@ type Local struct {
 	root string
 }
 
+const (
+	KEY_IMG_DEF = "img:default"
+)
+
 func (image *Local) Init() {
 	imagick.Initialize()
+	redisConnect()
+	//加载默认图片到redis
+	loadDefaultImg()
 }
 
 func (image *Local) Check(params map[string]string) {
@@ -75,67 +84,14 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	return paths, nil
 }
 
-func (image *Local) Download(download *storage.Download) ([]byte, string, error) {
-
-	var blob []byte
-	var err error
-	if download.WebP || download.Format == "webp" {
-		blob, err = readFileWebp(download.Context, download.Path)
-		if err != nil {
-			return nil, "", echo.ErrNotFound
-		}
-	} else if blob == nil {
-		// read image from local hard driver
-		blob, err = readFile(download.Context, download.Path)
-		if err != nil {
-			return nil, "", echo.ErrNotFound
-		}
-	}
-	if !download.HasParams {
-		return blob, http.DetectContentType(blob), nil
-	}
-	mw := imagick.NewMagickWand()
-	defer mw.Destroy()
-
-	err = mw.ReadImageBlob(blob)
-	//质量
-	//默认75
-	mw.SetCompressionQuality(75)
-	if download.Quality != "" {
-		quality, err := strconv.ParseUint(download.Quality, 10, 64)
-		if err != nil {
-			return nil, "", err
-		}
-		if quality < 100 {
-			mw.SetCompressionQuality(uint(quality))
-		}
-	}
-
-	// 缩放
-	if err = imagemagick.Resize(mw, download.Thumbnail); err != nil {
-		return nil, "", err
-	}
-	//缩略图
-	if err = imagemagick.Thumbnail(mw, download.Thumbnail); err != nil {
-		return nil, "", err
-	}
-	//格式转换
-	if download.Format != "" && download.Format != "webp" {
-		err = mw.SetImageFormat(download.Format)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-	mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
-	if download.Interlace != "" {
-		if download.Interlace == "plane" {
-			mw.SetInterlaceScheme(imagick.INTERLACE_PLANE)
-		}
-	}
-
-	mw.StripImage()
-	blob = mw.GetImageBlob()
-	return blob, http.DetectContentType(blob), err
+func (image *Local) Download(download *storage.Download) (*[]byte, string, error) {
+	var (
+		blob *[]byte
+		err  error
+	)
+	//从本地硬盘读取图片
+	blob, err = loadImageFromHardDrive(download)
+	return blob, http.DetectContentType(*blob), err
 }
 
 func (image *Local) Delete(del *storage.Delete) (bool, error) {
@@ -149,6 +105,16 @@ func (image *Local) Delete(del *storage.Delete) (bool, error) {
 }
 func (image *Local) Destory() {
 	imagick.Terminate()
+	cache.Close()
+}
+
+func getDefaultImag() *[]byte {
+	blob, err := cache.Get(KEY_IMG_DEF).Bytes()
+	if err != nil {
+		loadDefaultImg()
+		blob, err = cache.Get(KEY_IMG_DEF).Bytes()
+	}
+	return &blob
 }
 
 //删除图片
@@ -191,6 +157,7 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 			ch <- newFileName
 			return
 		}
+
 	}
 	//生成缩略图
 	if upload.Thumbnail != "" {
@@ -202,6 +169,93 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 	return
 }
 
+func loadDefaultImg() {
+	if blob, error := ioutil.ReadFile(filepath.Join(conf.Config.Storage, conf.Config.DefaultImg)); error == nil {
+		cache.Set(KEY_IMG_DEF, blob, 0)
+	} else {
+		log.Fatalf("读取默认图片[%s]失败,无法缓存图片", conf.Config.DefaultImg)
+	}
+}
+
+//获取图片
+func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
+	var (
+		blob []byte
+		err  error
+		mw   *imagick.MagickWand
+	)
+	key := strs.HashSHA1(download.URL)
+	//从缓存中获取图像
+	blob, err = cache.Get(key).Bytes()
+	if err != nil {
+		if download.WebP || download.Format == "webp" {
+			blob, err = readFileWebp(download.Context, download.Path)
+		}
+		if blob == nil {
+			// read image from local hard driver
+			blob, err = readFile(download.Context, download.Path)
+			if err != nil {
+				return getDefaultImag(), types.ErrNotFound
+			}
+		}
+		if blob != nil && !download.HasParams {
+			if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+				return &blob, err
+			}
+			return getDefaultImag(), err
+		}
+		mw = imagick.NewMagickWand()
+		defer mw.Destroy()
+		if blob == nil {
+			err = mw.ReadImage(filepath.Join(conf.Config.DefaultImg, download.Path))
+		} else {
+			err = mw.ReadImageBlob(blob)
+		}
+		if err != nil {
+			return getDefaultImag(), types.ErrNotFound
+		}
+		//质量
+		//默认75
+		mw.SetCompressionQuality(75)
+		if download.Quality != "" {
+			quality, err := strconv.ParseUint(download.Quality, 10, 64)
+			if err != nil {
+				return getDefaultImag(), err
+			}
+			if quality < 100 {
+				mw.SetCompressionQuality(uint(quality))
+			}
+		}
+
+		// 缩放
+		if err = imagemagick.Resize(mw, download.Thumbnail); err != nil {
+			return getDefaultImag(), err
+		}
+		//缩略图
+		if err = imagemagick.Thumbnail(mw, download.Thumbnail); err != nil {
+			return getDefaultImag(), err
+		}
+		//格式转换
+		if download.Format != "" && download.Format != "webp" {
+			err = mw.SetImageFormat(download.Format)
+			if err != nil {
+				return getDefaultImag(), err
+			}
+		}
+		mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
+		if download.Interlace != "" {
+			if download.Interlace == "plane" {
+				mw.SetInterlaceScheme(imagick.INTERLACE_PLANE)
+			}
+		}
+		mw.StripImage()
+		blob = mw.GetImageBlob()
+		if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+			return getDefaultImag(), err
+		}
+	}
+	return &blob, err
+}
 func generatorImage(blob *[]byte, fileName string, extension string, resize string, mw *imagick.MagickWand) (string, error) {
 	nfs := utils.FileNameNewExt(fileName, extension)
 	mw.ReadImageBlob(*blob)

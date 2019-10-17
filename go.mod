@@ -3,7 +3,8 @@ module image-server
 go 1.13
 
 require (
-	github.com/buzzxu/boys v0.0.0-20191015131846-80edfcd54726
+	github.com/buzzxu/boys v0.0.0-20191017135506-5637ad0079ca
+	github.com/buzzxu/ironman v0.0.1 // indirect
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/labstack/echo/v4 v4.1.11
 	github.com/labstack/gommon v0.3.0

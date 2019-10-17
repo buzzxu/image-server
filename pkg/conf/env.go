@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type (
@@ -31,11 +32,12 @@ type (
 	}
 
 	redis struct {
-		Addr     string `yaml:"addr"`
-		Password string `yaml:"password"`
-		DB       int    `yaml:"db"`
-		PoolSize int    `yaml:"poolSize"`
-		Expire   int32  `yaml:"expire"`
+		Addr       string        `yaml:"addr"`
+		Password   string        `yaml:"password"`
+		DB         int           `yaml:"db"`
+		PoolSize   int           `yaml:"poolSize"`
+		Expire     int32         `yaml:"expire"`
+		Expiration time.Duration `yaml:"-"`
 	}
 	aliyun struct {
 		Region          string `yaml:"region"`
@@ -75,7 +77,8 @@ func load(file string) *config {
 		Redis: &redis{
 			Addr:     "127.0.0.1:6379",
 			DB:       1,
-			PoolSize: 100,
+			PoolSize: runtime.NumCPU() * 20,
+			Password: "",
 			Expire:   10800},
 		WaterMark: &watermark{
 			Enable:    false,
@@ -99,6 +102,9 @@ func load(file string) *config {
 	}
 	if c.WaterMark.Enable {
 		c.WaterMark.convertGravityType()
+	}
+	if c.Type == "local" {
+		c.Redis.expire()
 	}
 	return c
 }
@@ -125,4 +131,8 @@ func (e *watermark) convertGravityType() {
 		e.gravityType = imagick.GRAVITY_SOUTH_EAST
 		break
 	}
+}
+
+func (r *redis) expire() {
+	r.Expiration = time.Duration(r.Expire) * time.Second
 }

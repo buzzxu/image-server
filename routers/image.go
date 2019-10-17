@@ -80,6 +80,7 @@ func getImage(c echo.Context) error {
 		Context:   c.Request().Context(),
 		Path:      path,
 		FileName:  c.QueryParam("filename"),
+		URL:       c.Request().RequestURI,
 		Resize:    c.QueryParam("size"),
 		Format:    format,
 		Line:      c.QueryParam("Line") != "",
@@ -95,11 +96,20 @@ func getImage(c echo.Context) error {
 	}
 	download.HasParams = len(c.QueryParams()) > 0
 	blob, contentType, err := storage.Storager.Download(download)
+	code := http.StatusOK
 	if err != nil {
-		c.Logger().Errorf("", err)
-		return err
+		if e, ok := err.(*types.Error); ok {
+			code = e.Code
+		} else if e, ok := err.(*echo.HTTPError); ok {
+			code = e.Code
+		} else {
+			code = http.StatusInternalServerError
+		}
+		if code >= 500 {
+			c.Logger().Errorf("%s 读取失败,原因:%s", path, err.Error())
+		}
 	}
 	c.Response().Header().Set("Cache-Control", "public,max-age="+strconv.Itoa(conf.Config.MaxAge))
-	c.Response().Header().Set("Content-Length", strconv.Itoa(len(blob)))
-	return c.Blob(200, contentType, blob)
+	c.Response().Header().Set("Content-Length", strconv.Itoa(len(*blob)))
+	return c.Blob(code, contentType, *blob)
 }
