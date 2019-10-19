@@ -114,10 +114,7 @@ func load(file string) *config {
 		c.WaterMark.convertGravityType()
 	}
 	if c.Type == "local" {
-		c.Redis.expire()
-		if c.Redis.PoolSize == 0 {
-			c.Redis.PoolSize = c.MaxProc * 20
-		}
+		c.Redis.env()
 	}
 	if c.Domain == "none" {
 		c.Domain = ""
@@ -149,8 +146,14 @@ func (e *watermark) convertGravityType() {
 	}
 }
 
-func (r *redis) expire() {
+func (r *redis) env() {
 	r.Expiration = time.Duration(r.Expire) * time.Second
+	if r.PoolSize == 0 {
+		r.PoolSize = runtime.NumCPU() * 20
+	}
+	if r.Password == "none" {
+		r.Password = ""
+	}
 }
 
 func isConfExsits(file string) bool {
