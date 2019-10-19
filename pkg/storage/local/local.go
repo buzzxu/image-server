@@ -82,6 +82,11 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 		}
 		paths[index] = newFileName
 	}
+	if conf.Config.Domain != "" {
+		for i := 0; i < len(paths); i++ {
+			paths[i] = conf.Config.Domain + paths[i]
+		}
+	}
 	return paths, nil
 }
 
@@ -193,7 +198,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 	}
 	//从缓存中获取图像
 	blob, err = cache.Get(key).Bytes()
-	if err != nil {
+	if err == nil || len(blob) == 0 {
 		if download.WebP || download.Format == "webp" {
 			blob, err = readFileWebp(download.Context, download.Path)
 		}
@@ -207,9 +212,9 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		}
 		if blob != nil && !download.HasParams {
 			if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
-				return &blob, err
+				return getDefaultImag(), types.ErrorOf(err)
 			}
-			return getDefaultImag(), err
+			return &blob, nil
 		}
 		mw = imagick.NewMagickWand()
 		defer mw.Destroy()
@@ -227,7 +232,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		if download.Quality != "" {
 			quality, err := strconv.ParseUint(download.Quality, 10, 64)
 			if err != nil {
-				return getDefaultImag(), err
+				return getDefaultImag(), types.ErrorOf(err)
 			}
 			if quality < 100 {
 				mw.SetCompressionQuality(uint(quality))
@@ -235,18 +240,17 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		}
 
 		// 缩放
-		if err = imagemagick.Resize(mw, download.Thumbnail); err != nil {
-			return getDefaultImag(), err
+		if err = imagemagick.Resize(mw, download.Resize); err != nil {
+			return getDefaultImag(), types.ErrorOf(err)
 		}
 		//缩略图
 		if err = imagemagick.Thumbnail(mw, download.Thumbnail); err != nil {
-			return getDefaultImag(), err
+			return getDefaultImag(), types.ErrorOf(err)
 		}
 		//格式转换
 		if download.Format != "" && download.Format != "webp" {
-			err = mw.SetImageFormat(download.Format)
-			if err != nil {
-				return getDefaultImag(), err
+			if err = mw.SetImageFormat(download.Format); err != nil {
+				return getDefaultImag(), types.ErrorOf(err)
 			}
 		}
 		mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
@@ -258,7 +262,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		mw.StripImage()
 		blob = mw.GetImageBlob()
 		if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
-			return getDefaultImag(), err
+			return getDefaultImag(), types.ErrorOf(err)
 		}
 	}
 	return &blob, err

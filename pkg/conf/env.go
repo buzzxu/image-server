@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"github.com/labstack/gommon/log"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"gopkg.in/yaml.v2"
@@ -64,13 +65,14 @@ var Config *config
 func init() {
 	currentDir, _ := os.Getwd()
 	Config = load(currentDir + "/conf.yml")
-	log.Print(Config)
+	println(fmt.Sprintf("Port:%x,Domain:%s,Type:%s,Storage:%s", Config.Port, Config.Domain, Config.Type, Config.Storage))
 }
 
 func load(file string) *config {
 	//default value
 	var c = &config{
 		Port:       3000,
+		Domain:     "",
 		Storage:    "/data/images",
 		MaxAge:     31536000,
 		BodyLimit:  "5M",
@@ -92,14 +94,18 @@ func load(file string) *config {
 			Color:     "white",
 		},
 	}
-	yamlFile, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalf("yamlFile.Get err   #%v ", err)
+	if isConfExsits(file) {
+		yamlFile, err := ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatalf("读取配置文件内容失败,%v ", err)
+		}
+		if yaml.Unmarshal(yamlFile, c); err != nil {
+			log.Fatalf("解析配置文件失败: %v", err)
+		}
+	} else {
+		log.Warnf("未发现配置文件:%s,使用默认配置", file)
 	}
-	err = yaml.Unmarshal(yamlFile, c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-	}
+
 	// 设置go processor数量
 	if c.MaxProc == 0 {
 		c.MaxProc = runtime.NumCPU()
@@ -109,6 +115,12 @@ func load(file string) *config {
 	}
 	if c.Type == "local" {
 		c.Redis.expire()
+		if c.Redis.PoolSize == 0 {
+			c.Redis.PoolSize = c.MaxProc * 20
+		}
+	}
+	if c.Domain == "none" {
+		c.Domain = ""
 	}
 	return c
 }
@@ -139,4 +151,11 @@ func (e *watermark) convertGravityType() {
 
 func (r *redis) expire() {
 	r.Expiration = time.Duration(r.Expire) * time.Second
+}
+
+func isConfExsits(file string) bool {
+	if _, err := os.Stat(file); err != nil {
+		return false
+	}
+	return true
 }

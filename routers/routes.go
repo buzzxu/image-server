@@ -37,6 +37,10 @@ func images(group *echo.Group) {
 	group.GET("/:folder0/:folder1/:filename", getImage)
 	group.GET("/:folder0/:folder1/:folder2/:filename", getImage)
 	group.GET("/:folder0/:folder1/:folder2/:folder3/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:folder3/:folder4/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:folder3/:folder4/:folder5/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:folder3/:folder4/:folder5/:folder6/:filename", getImage)
+	group.GET("/:folder0/:folder1/:folder2/:folder3/:folder4/:folder5/:folder6/:folder7/:filename", getImage)
 	group.POST("/upload", upload, jwt, middleware.BodyLimit(conf.Config.BodyLimit))
 	group.DELETE("/delete", del, jwt)
 }
