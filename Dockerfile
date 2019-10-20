@@ -97,7 +97,7 @@ RUN apt-get update && \
     mkdir -p /data/images && \
     apt-get remove w--purge -y get build-essential pkg-config && \
     apt-get clean && \
-    apt-get autoremove -y &&
+    apt-get autoremove -y && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
