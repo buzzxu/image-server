@@ -2,7 +2,8 @@ package local
 
 import (
 	"context"
-	"github.com/buzzxu/boys/common/strs"
+	"encoding/hex"
+	"github.com/buzzxu/boys/common/structs"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -190,7 +191,9 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		err  error
 		mw   *imagick.MagickWand
 	)
-	key := strs.HashSHA1(download.URL)
+	//key := strs.HashSHA1(download.URL)
+	//struct hashcode
+	key := hex.EncodeToString(structs.Sha1(download, 1))
 	keyNotfound := key_prefix + key
 	//如果不存在此图像 直接返回404
 	if cache.Exists(keyNotfound).Val() > 0 {
@@ -198,19 +201,18 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 	}
 	//从缓存中获取图像
 	blob, err = cache.Get(key).Bytes()
-	if err == nil || len(blob) == 0 {
-		if download.WebP || download.Format == "webp" {
+	if blob == nil {
+		if download.Format == "webp" {
 			blob, err = readFileWebp(download.Context, download.Path)
 		}
-		if blob == nil {
+		if blob == nil || err != nil {
 			// read image from local hard driver
-			blob, err = readFile(download.Context, download.Path)
-			if err != nil {
+			if blob, err = readFile(download.Context, download.Path); err != nil {
 				cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
 				return getDefaultImag(), types.ErrNotFound
 			}
 		}
-		if blob != nil && !download.HasParams {
+		if blob != nil && !download.HasParams && download.Format == "webp" {
 			if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 				return getDefaultImag(), types.ErrorOf(err)
 			}
@@ -218,25 +220,56 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		}
 		mw = imagick.NewMagickWand()
 		defer mw.Destroy()
-		if blob == nil {
-			if err = mw.ReadImage(filepath.Join(conf.Config.DefaultImg, download.Path)); err != nil {
-				cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
-				return getDefaultImag(), types.ErrNotFound
+		//读取blob
+		mw.ReadImageBlob(blob)
+		//if blob == nil {
+		//	if err = mw.ReadImage(filepath.Join(conf.Config.DefaultImg, download.Path)); err != nil {
+		//		cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
+		//		return getDefaultImag(), types.ErrNotFound
+		//	}
+		//} else {
+		//	mw.ReadImageBlob(blob)
+		//}
+		mw.SetInterlaceScheme(imagick.INTERLACE_PLANE)
+		if download.Line {
+			mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
+		} else if download.Interlace != "" {
+			switch download.Interlace {
+			case "line":
+				mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
+				break
+			case "plane":
+				mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
+				break
+			case "partition":
+				mw.SetInterlaceScheme(imagick.INTERLACE_PARTITION)
+				break
+			case "jpeg":
+				mw.SetInterlaceScheme(imagick.INTERLACE_JPEG)
+				break
+			case "png":
+				mw.SetInterlaceScheme(imagick.INTERLACE_PNG)
+				break
+			default:
+				mw.SetInterlaceScheme(imagick.INTERLACE_NO)
 			}
-		} else {
-			mw.ReadImageBlob(blob)
 		}
+
 		//质量
 		//默认75
-		mw.SetCompressionQuality(75)
+		mw.SetImageCompressionQuality(75)
 		if download.Quality != "" {
 			quality, err := strconv.ParseUint(download.Quality, 10, 64)
 			if err != nil {
 				return getDefaultImag(), types.ErrorOf(err)
 			}
 			if quality < 100 {
-				mw.SetCompressionQuality(uint(quality))
+				mw.SetImageCompressionQuality(uint(quality))
 			}
+		}
+
+		if download.Gamma > 0 {
+			mw.SetImageGamma(download.Gamma)
 		}
 
 		// 缩放
@@ -253,16 +286,12 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 				return getDefaultImag(), types.ErrorOf(err)
 			}
 		}
-		mw.SetInterlaceScheme(imagick.INTERLACE_LINE)
-		if download.Interlace != "" {
-			if download.Interlace == "plane" {
-				mw.SetInterlaceScheme(imagick.INTERLACE_PLANE)
-			}
-		}
+		//平滑度
+		//mw.SetAntialias(download.Antialias)
 		mw.StripImage()
 		blob = mw.GetImageBlob()
 		if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
-			return getDefaultImag(), types.ErrorOf(err)
+			return &blob, types.ErrorOf(err)
 		}
 	}
 	return &blob, err

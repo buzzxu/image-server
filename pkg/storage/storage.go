@@ -57,21 +57,22 @@ type (
 	}
 	//读取的参数
 	Download struct {
-		Params    map[string]string
-		Blod      []byte
+		//Params    map[string]string  `hash:"-"`
+		//Blod      []byte
 		Path      string
 		FileName  string
-		URL       string
-		Logger    echo.Logger
-		Context   context.Context
-		HasParams bool
+		URL       string          `hash:"-"`
+		Logger    echo.Logger     `hash:"-"`
+		Context   context.Context `hash:"-"`
+		HasParams bool            `hash:"-"`
 		Resize    string
 		Format    string
 		Line      bool
-		WebP      bool
 		Quality   string
 		Thumbnail string
 		Interlace string
+		Gamma     float64
+		Antialias bool
 	}
 	Delete struct {
 		Keys    []string

@@ -20,6 +20,8 @@ github.com/buzzxu/boys v0.0.0-20191017134203-13bdce3ad0d9 h1:EOJYlTaOjbe8xs0nShv
 github.com/buzzxu/boys v0.0.0-20191017134203-13bdce3ad0d9/go.mod h1:sc1eEBrQVNGJ+FstN6lOyLH/bOUScQEvVxmSEV+UVQs=
 github.com/buzzxu/boys v0.0.0-20191017135506-5637ad0079ca h1:UfGRCf1fdyw75ayIpj5ogqIr6Yhrh9q0SkEbxliqRJw=
 github.com/buzzxu/boys v0.0.0-20191017135506-5637ad0079ca/go.mod h1:sc1eEBrQVNGJ+FstN6lOyLH/bOUScQEvVxmSEV+UVQs=
+github.com/buzzxu/boys v0.0.0-20191020113752-d8dd33db2600 h1:WjhOr3Dl1XyZifQifXYXcDCC3oLJIwnDLUxFlTzO6L8=
+github.com/buzzxu/boys v0.0.0-20191020113752-d8dd33db2600/go.mod h1:sc1eEBrQVNGJ+FstN6lOyLH/bOUScQEvVxmSEV+UVQs=
 github.com/buzzxu/ironman v0.0.1 h1:ISV9thuux7BhlhaYLF16Vd+pLJ2PJtRZfgjBssv+/bY=
 github.com/buzzxu/ironman v0.0.1/go.mod h1:m0nlrY25cOPu96nVRcjDZqG7yfsXNjbVrW/CPv9vQ8w=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

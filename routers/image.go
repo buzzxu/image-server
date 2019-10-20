@@ -89,24 +89,34 @@ func getImage(c echo.Context) error {
 	url := c.Request().URL.Path
 	path := url[7:]
 	_, webp := c.QueryParams()["webp"]
+	_, antialias := c.QueryParams()["antialias"]
+	_, line := c.QueryParams()["line"]
 	format := c.QueryParam("format")
-	download := &storage.Download{
-		Context:   c.Request().Context(),
-		Path:      path,
-		FileName:  c.QueryParam("filename"),
-		URL:       c.Request().RequestURI,
-		Resize:    c.QueryParam("size"),
-		Format:    format,
-		Line:      c.QueryParam("Line") != "",
-		WebP:      webp,
-		Quality:   c.QueryParam("quality"),
-		Thumbnail: c.QueryParam("thumbnail"),
-	}
 	if format != "" {
 		c.QueryParams().Del("format")
 	}
 	if webp {
 		c.QueryParams().Del("webp")
+		format = "webp"
+	}
+	download := &storage.Download{
+		Context:   c.Request().Context(),
+		Logger:    c.Logger(),
+		Path:      path,
+		FileName:  c.QueryParam("filename"),
+		URL:       c.Request().RequestURI,
+		Resize:    c.QueryParam("size"),
+		Format:    format,
+		Line:      line,
+		Quality:   c.QueryParam("quality"),
+		Thumbnail: c.QueryParam("thumbnail"),
+		Interlace: c.QueryParam("interlace"),
+		Antialias: antialias,
+	}
+	if gamma := c.QueryParam("gamma"); gamma != "" {
+		if v, err := strconv.ParseFloat(gamma, 64); err == nil {
+			download.Gamma = v
+		}
 	}
 	download.HasParams = len(c.QueryParams()) > 0
 	blob, contentType, err := storage.Storager.Download(download)

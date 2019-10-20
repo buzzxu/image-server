@@ -20,7 +20,11 @@ func New() *echo.Echo {
 	e.Logger.SetLevel(log.INFO)
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		DisablePrintStack: true,
+		DisableStackAll:   true,
+		StackSize:         4 << 10,
+	}))
 	Register(e)
 	return e
 }
