@@ -1,0 +1,54 @@
+FROM golang:alpine as build
+
+WORKDIR $GOPATH/src/image-server
+ADD . $GOPATH/src/image-server
+ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.io
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
+RUN apk update && apk upgrade;  \
+    apk --no-cache add pkgconf gcc g++ libwebp-dev imagemagick-dev graphicsmagick-dev imagemagick graphicsmagick; \
+    export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
+    export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
+    export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
+#    export CGO_ENABLED=0 GOOS=linux GOARCH=amd64; \
+#    export CGO_LDFLAGS="\
+#    -Wl,-Bstatic \
+#        `pkg-config --libs MagickWand MagickCore` \
+#         -ljbig -ltiff -ljpeg -lwebp -llzma -lfftw3 -lbz2 -lgomp \
+#    -Wl,-Bdynamic \
+#        -llcms2 -llqr-1 -lglib-2.0 -lpng12 -lxml2 -lz -lm -ldl \
+#    "; \
+    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
+    cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
+    go build -o app; \
+    mv app  /opt/app;
+
+
+FROM alpine
+
+MAINTAINER buzzxu <downloadxu@163.com>
+
+WORKDIR /app
+COPY --from=build /opt/app /app
+#
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN apk update && apk upgrade && \
+    apk add --no-cache -U pkgconf zlib libpng libjpeg-turbo libwebp giflib tzdata xz-dev imagemagick && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    chmod a+x app && \
+    mkdir -p /data/images && \
+    rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/*
+
+ADD docker/conf.yml /app/conf.yml
+ADD docker/run.sh /app/run.sh
+ADD docker/default.png /data/images
+
+ENV TZ Asia/Shanghai
+ENV LANG C.UTF-8
+
+EXPOSE 3000
+#ENTRYPOINT ["/bin/sh","run.sh"]
+

@@ -1,54 +1,106 @@
-FROM golang:alpine as build
+FROM golang:buster as build
 
 WORKDIR $GOPATH/src/image-server
 ADD . $GOPATH/src/image-server
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.io
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
-RUN apk update && apk upgrade;  \
-    apk --no-cache add pkgconf gcc g++ imagemagick-dev graphicsmagick-dev; \
-    export CGO_CFLAGS="$(pkg-config --cflags MagickWand)" && export CGO_LDFLAGS="$(pkg-config --libs MagickWand)"; \
-    cd $GOPATH/src/image-server && go install; \
-    mv $GOPATH/bin/image-server /opt/app
-#ENV IMAGEMAGICK_VERSION=7.0.8-68
-#RUN apk update && apk upgrade;  \
-#    apk --no-cache add axel zlib libpng-dev libjpeg-turbo-dev libwebp-dev giflib-dev libx11-dev xz-dev; \
-#    axel -a -n 10 -o ImageMagick.tar.gz https://github.com/ImageMagick/ImageMagick/archive/${IMAGEMAGICK_VERSION}.tar.gz; \
-#    tar xvzf ImageMagick.tar.gz && \
-#    cd ImageMagick* && \
-#	./configure \
-#	    --without-magick-plus-plus \
-#	    --without-perl \
-#	    --disable-openmp \
-#	    --with-gvc=no \
-#	    --disable-docs && \
-#	make -j$(nproc) && make install && \
-#	ldconfig /usr/local/lib && \
-##	cd .. && rm -rf ImageMagick-${IMAGEMAGICK_VERSION}; \
-#    pkg-config --cflags --libs MagickWand MagickCore;  \
-#    go install -tags no_pkgconfig gopkg.in/gographics/imagick.v3/imagick; \
-##    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app -tags no_pkgconfig gopkg.in/gographics/imagick.v3/imagick; \
-#    chmod a+x $GOPATH/bin/image-server;
+#RUN apt-get update && apt install -y apt-transport-https ca-certificates curl
+#RUN echo \
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free\
+#    > /etc/apt/sources.list
+
+RUN apt-get update && \
+    apt-get install -y wget build-essential pkg-config --no-install-recommends
+
+RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev --no-install-recommends;
+
+RUN cd && \
+    	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
+    	tar -xvf ImageMagick.tar.gz && \
+    	cd ImageMagick* && \
+    	./configure --prefix=/usr \
+    	    --without-magick-plus-plus \
+    	    --without-perl \
+    	    --disable-openmp \
+    	    --with-gvc=no \
+    	    --disable-docs && \
+    	make -j$(nproc) && make install && \
+    	ldconfig /usr/local/lib && \
+    export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
+    export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
+    export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
+#    export CGO_ENABLED=0 GOOS=linux GOARCH=amd64; \
+#    export CGO_LDFLAGS="\
+#    -Wl,-Bstatic \
+#        `pkg-config --libs MagickWand MagickCore` \
+#         -ljbig -ltiff -ljpeg -lwebp -llzma -lfftw3 -lbz2 -lgomp \
+#    -Wl,-Bdynamic \
+#        -llcms2 -llqr-1 -lglib-2.0 -lpng12 -lxml2 -lz -lm -ldl \
+#    "; \
+    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
+    cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
+    go build -o app; \
+    mv app  /opt/app;
 
 
-FROM alpine
+FROM debian:buster-slim
 
 MAINTAINER buzzxu <downloadxu@163.com>
 
 WORKDIR /app
 COPY --from=build /opt/app /app
-#
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-RUN apk update && apk upgrade && \
-    apk add --no-cache -U pkgconf zlib libpng libjpeg-turbo libwebp giflib tzdata xz-dev imagemagick && \
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+
+ENV DEBIAN_FRONTEND noninteractive
+
+#RUN apt-get update && apt install -y apt-transport-https ca-certificates curl
+#RUN echo \
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free\
+#    deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free\
+#    > /etc/apt/sources.list
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y wget build-essential pkg-config \
+    libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
+    libgif-dev libx11-dev && \
+    cd && \
+    wget https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 && \
+    tar -xjvf jemalloc-5.2.1.tar.bz2 && \
+    cd jemalloc-5.2.1/ && \
+    ./configure --prefix=/usr/local/jemalloc --libdir=/usr/local/lib && \
+    make -j$(nproc) && make install && \
+    rm -rf /tmp/jemalloc && \
+    rm -rf jemalloc* && \
+    cd  && \
+	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
+	tar -xvf ImageMagick.tar.gz && \
+	cd ImageMagick* && \
+	./configure --prefix=/usr \
+	    --without-magick-plus-plus \
+	    --without-perl \
+	    --with-jemalloc=yes \
+	    --disable-openmp \
+	    --with-gvc=no \
+	    --disable-docs && \
+	make -j$(nproc) && make install && \
+	rm -rf ImageMagick* && \
+	ldconfig /usr/local/lib && \
+	rm /etc/localtime && \
+    ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
-    chmod a+x app && \
     mkdir -p /data/images && \
-    rm -rf /var/cache/apk/* && \
+    apt-get remove w--purge -y get build-essential pkg-config && \
+    apt-get clean && \
+    apt-get autoremove -y &&
+    apt-get autoclean && \
+    rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
-#
 
 ADD docker/conf.yml /app/conf.yml
 ADD docker/run.sh /app/run.sh
