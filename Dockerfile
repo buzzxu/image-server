@@ -84,7 +84,7 @@ RUN apt-get update && \
 	./configure --prefix=/usr \
 	    --without-magick-plus-plus \
 	    --without-perl \
-	    --with-jemalloc=yes \
+	    --with-jemalloc \
 	    --disable-openmp \
 	    --with-gvc=no \
 	    --disable-docs && \
@@ -95,7 +95,7 @@ RUN apt-get update && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     mkdir -p /data/images && \
-    apt-get remove w--purge -y get build-essential pkg-config && \
+    apt-get remove --purge -y wget build-essential pkg-config && \
     apt-get clean && \
     apt-get autoremove -y && \
     apt-get autoclean && \
