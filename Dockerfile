@@ -66,7 +66,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y wget build-essential pkg-config \
+    apt-get install -y wget build-essential pkg-config fontconfig \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
     libgif-dev libx11-dev && \
     cd && \
@@ -75,6 +75,7 @@ RUN apt-get update && \
     cd jemalloc-5.2.1/ && \
     ./configure --prefix=/usr/local/jemalloc --libdir=/usr/local/lib && \
     make -j$(nproc) && make install && \
+    ldconfig /usr/local/lib && \
     rm -rf /tmp/jemalloc && \
     rm -rf jemalloc* && \
     cd  && \
