@@ -75,7 +75,8 @@ RUN apt-get update && \
     cd jemalloc-5.2.1/ && \
     ./configure --prefix=/usr/local/jemalloc --libdir=/usr/local/lib && \
     make -j$(nproc) && make install && \
-    ldconfig /usr/local/lib && \
+    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
+    ldconfig  && \
     rm -rf /tmp/jemalloc && \
     rm -rf jemalloc* && \
     cd  && \
