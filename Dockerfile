@@ -98,7 +98,6 @@ RUN apt-get update && \
     apt-get clean && \
     apt-get autoremove -y && \
     apt-get autoclean && \
-    chmod a+x app && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
 
