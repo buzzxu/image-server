@@ -66,17 +66,17 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y wget build-essential pkg-config fontconfig \
+    apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
     libgif-dev libx11-dev && \
-    cd /tmp && \
-    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
-    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
-    cd jemalloc-4.5.0/ && \
-    ./configure --prefix=/usr/local/jemalloc && \
-    make -j$(nproc) && make install && \
-    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
-    ldconfig  && \
+#    cd /tmp && \
+#    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
+#    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
+#    cd jemalloc-4.5.0/ && \
+#    ./configure --prefix=/usr/local/jemalloc && \
+#    make -j$(nproc) && make install && \
+#    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
+#    ldconfig  && \
     cd  /tmp && \
 	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
 	tar -xvf ImageMagick.tar.gz && \
