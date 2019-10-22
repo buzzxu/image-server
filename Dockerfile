@@ -69,17 +69,15 @@ RUN apt-get update && \
     apt-get install -y wget build-essential pkg-config fontconfig \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
     libgif-dev libx11-dev && \
-    cd && \
+    cd /tmp && \
     wget https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 && \
     tar -xjvf jemalloc-5.2.1.tar.bz2 && \
     cd jemalloc-5.2.1/ && \
-    ./configure --prefix=/usr/local/jemalloc --libdir=/usr/local/lib && \
+    ./configure --prefix=/usr/local/jemalloc && \
     make -j$(nproc) && make install && \
     echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
     ldconfig  && \
-    rm -rf /tmp/jemalloc && \
-    rm -rf jemalloc* && \
-    cd  && \
+    cd  /tmp && \
 	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
 	tar -xvf ImageMagick.tar.gz && \
 	cd ImageMagick* && \
@@ -91,7 +89,6 @@ RUN apt-get update && \
 	    --with-gvc=no \
 	    --disable-docs && \
 	make -j$(nproc) && make install && \
-	rm -rf ImageMagick* && \
 	ldconfig /usr/local/lib && \
 	rm /etc/localtime && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
@@ -101,6 +98,7 @@ RUN apt-get update && \
     apt-get clean && \
     apt-get autoremove -y && \
     apt-get autoclean && \
+    chmod a+x app && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
 
