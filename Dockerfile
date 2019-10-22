@@ -70,9 +70,9 @@ RUN apt-get update && \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
     libgif-dev libx11-dev && \
     cd /tmp && \
-    wget https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 && \
-    tar -xjvf jemalloc-5.2.1.tar.bz2 && \
-    cd jemalloc-5.2.1/ && \
+    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
+    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
+    cd jemalloc-4.5.0/ && \
     ./configure --prefix=/usr/local/jemalloc && \
     make -j$(nproc) && make install && \
     echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
@@ -109,5 +109,5 @@ ENV TZ Asia/Shanghai
 ENV LANG C.UTF-8
 
 EXPOSE 3000
-#ENTRYPOINT ["/bin/bash","run.sh"]
+ENTRYPOINT ["/bin/bash","run.sh"]
 
