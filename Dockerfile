@@ -68,7 +68,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
-    libgif-dev libx11-dev && \
+    libgif-dev libx11-dev --no-install-recommends && \
 #    cd /tmp && \
 #    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
 #    tar -xjvf jemalloc-4.5.0.tar.bz2 && \

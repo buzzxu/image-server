@@ -26,7 +26,7 @@ COPY --from=build /opt/app /app
 #
 #RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 RUN apk update && apk upgrade && \
-    apk add --no-cache -U wget file pkgconf zlib libx11-dev gcc g++ libpng-dev libjpeg-turbo-dev libwebp-dev giflib-dev tzdata xz-dev && \
+    apk add --no-cache -U build-dependencies wget file pkgconf zlib libx11-dev libpng-dev libjpeg-turbo-dev libwebp-dev giflib-dev tzdata xz-dev && \
      cd  /tmp && \
     	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
     	tar -xvf ImageMagick.tar.gz && \
@@ -41,7 +41,7 @@ RUN apk update && apk upgrade && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     mkdir -p /data/images && \
-    apk del wget gcc g++ && \
+    apk del wget build-dependencies && \
     rm -rf /var/cache/apk/* && \
     rm -rf /tmp/*
 
