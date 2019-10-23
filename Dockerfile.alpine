@@ -7,18 +7,7 @@ ENV GOPROXY=https://goproxy.io
 #RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 RUN apk update && apk upgrade;  \
-    apk --no-cache add wget pkgconf gcc g++ zlib libwebp-dev libpng-dev  libjpeg-turbo-dev giflib-dev libx11-dev && \
-    cd && wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
-        	tar -xvf ImageMagick.tar.gz && \
-        	cd ImageMagick* && \
-        	./configure --prefix=/usr \
-        	    --without-magick-plus-plus \
-        	    --without-perl \
-        	    --disable-openmp \
-        	    --with-gvc=no \
-        	    --disable-docs && \
-        	make -j$(nproc) && make install && \
-        	ldconfig /usr/local/lib && \
+    apk --no-cache add  gcc g++ zlib libwebp-dev libpng-dev  libjpeg-turbo-dev giflib-dev libx11-dev imagemagick-dev && \
     export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
     export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
     export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
