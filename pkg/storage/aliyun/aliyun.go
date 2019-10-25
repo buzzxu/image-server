@@ -10,12 +10,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
-var client *oss.Client
-var bucket *oss.Bucket
-var url string
-var defaultImg *[]byte
+var (
+	client     *oss.Client
+	bucket     *oss.Bucket
+	url        string
+	defaultImg *[]byte
+	urlLength  int
+)
 
 type Aliyun struct {
 }
@@ -34,11 +38,15 @@ func (image *Aliyun) Init() {
 			log.Fatalf("重新获取Bucket[%s] 失败,原因 %s", conf.Config.Aliyun.Bucket, err.Error())
 		}
 	}
-	url = conf.Config.Aliyun.Endpoint[:8] + conf.Config.Aliyun.Bucket + "." + conf.Config.Aliyun.Endpoint[8:]
+	if conf.Config.Domain == "" {
+		url = conf.Config.Aliyun.Endpoint[:8] + conf.Config.Aliyun.Bucket + "." + conf.Config.Aliyun.Endpoint[8:]
+	} else {
+		url = conf.Config.Domain
+	}
 	if defaultImg, err = storage.GetDefaultImg(); err != nil {
 		log.Fatalf("默认图片加载失败,原因 %s", err.Error())
 	}
-
+	urlLength = len(url) + 1
 }
 
 func (image *Aliyun) Check(params map[string]string) {
@@ -69,11 +77,19 @@ func (image *Aliyun) Delete(del *storage.Delete) (bool, error) {
 	var err error
 	numfiles := len(del.Keys)
 	if numfiles == 1 {
-		err = bucket.DeleteObject(del.Keys[0][:1])
+		if strings.Contains(del.Keys[0], url) {
+			err = bucket.DeleteObject(del.Keys[0][urlLength:])
+		} else {
+			err = bucket.DeleteObject(del.Keys[0][1:])
+		}
 	} else {
 		var keys = make([]string, len(del.Keys))
 		for index := 0; index < numfiles; index++ {
-			keys[index] = del.Keys[index][:1]
+			if strings.Contains(del.Keys[index], url) {
+				keys[index] = del.Keys[index][urlLength:]
+			} else {
+				keys[index] = del.Keys[index][1:]
+			}
 		}
 		_, err = bucket.DeleteObjects(keys)
 	}

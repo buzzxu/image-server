@@ -30,11 +30,14 @@ const (
 	key_prefix      = "notfound:"
 )
 
+var url_prefix_length int
+
 func (image *Local) Init() {
 	imagick.Initialize()
 	redisConnect()
 	//加载默认图片到redis
 	loadDefaultImg()
+	url_prefix_length = len(conf.Config.Domain)
 }
 
 func (image *Local) Check(params map[string]string) {
@@ -128,6 +131,9 @@ func delLocalHard(file string, context context.Context, logger echo.Logger, wg *
 	defer func() {
 		wg.Done()
 	}()
+	if url_prefix_length > 0 && strings.Contains(file, conf.Config.Domain) {
+		file = file[url_prefix_length:]
+	}
 	//验证是否有此图片
 	if blob, err := readFile(context, file); err != nil {
 		logger.Errorf("文件:%s,删除失败,原因:无法获取图片信息", file)
