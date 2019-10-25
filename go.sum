@@ -1,3 +1,5 @@
+github.com/aliyun/aliyun-oss-go-sdk v2.0.3+incompatible h1:724q2AmQ3m1mrdD9kYqK5+1+Zr77vS21jdQ9iF9t4b8=
+github.com/aliyun/aliyun-oss-go-sdk v2.0.3+incompatible/go.mod h1:T/Aws4fEfogEE9v+HPhhw+CntffsBHJ8nXQCwKr0/g8=
 github.com/buzzxu/boys v0.0.0-20191015040903-e4f288851e2f h1:rLiTNZJnqowQoaquxuyAwCP0xi+3xBgJa7wXqP8O1F0=
 github.com/buzzxu/boys v0.0.0-20191015040903-e4f288851e2f/go.mod h1:sc1eEBrQVNGJ+FstN6lOyLH/bOUScQEvVxmSEV+UVQs=
 github.com/buzzxu/boys v0.0.0-20191015041147-6a7003d24d9f h1:9t99Pd58Kh4aaRPEmQAbWjtUZqayVZbZwzpFYVVgeR0=
@@ -90,6 +92,8 @@ golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
+golang.org/x/time v0.0.0-20191024005414-555d28b269f0 h1:/5xXl8Y5W96D+TtHSlonuFqGHIWVuyCkGJLwGh9JJFs=
+golang.org/x/time v0.0.0-20191024005414-555d28b269f0/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/fsnotify.v1 v1.4.7/go.mod h1:Tz8NjZHkW78fSQdbUxIjBTcgA1z1m8ZHf0WmKUhAMys=

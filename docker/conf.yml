@@ -1,7 +1,9 @@
-Domain: none
+port: 3000
+domain: none
+uploadDir: /data/images
 maxAge: 31536000
-BodyLimit: 5M
-SizeLimit: 500K
+bodyLimit: 5M
+sizeLimit: 500K
 defaultImg: default.png
 type: local
 jwt:
@@ -11,7 +13,7 @@ watermark:
   enable: false
   color: red
   gravity: center
-  text: jd.com
+  text: none
 redis:
   addr: host.docker.internal:6379
   db: 1
@@ -19,8 +21,7 @@ redis:
   poolSize: 0
   expire: 10800 #默认 3小时
 aliyun:
-  region: xux
+  endpoint: http://oss-cn-hangzhou.aliyuncs.com
   accessKeyId: xux
   accessKeySecret: xux
   bucket: xux
-  secure: true

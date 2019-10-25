@@ -81,11 +81,10 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 		if upload.Thumbnail != "" {
 			generatorThumbnailImage(upload.Blobs[index], newFileName, upload.Thumbnail, mw)
 		}
-		paths[index] = newFileName
-	}
-	if conf.Config.Domain != "" {
-		for i := 0; i < len(paths); i++ {
-			paths[i] = conf.Config.Domain + paths[i]
+		if conf.Config.Domain != "" {
+			paths[index] = conf.Config.Domain + newFileName
+		} else {
+			paths[index] = newFileName
 		}
 	}
 	return paths, nil
@@ -177,7 +176,7 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 }
 
 func loadDefaultImg() {
-	if blob, error := ioutil.ReadFile(filepath.Join(conf.Config.Storage, conf.Config.DefaultImg)); error == nil {
+	if blob, error := storage.GetDefaultImg(); error == nil {
 		cache.Set(key_img_default, blob, 0)
 	} else {
 		log.Fatalf("读取默认图片[%s]失败,无法缓存图片", conf.Config.DefaultImg)

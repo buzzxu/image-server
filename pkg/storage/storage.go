@@ -4,6 +4,9 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"image-server/pkg/conf"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -49,6 +52,7 @@ type (
 	//上传的参数
 	Upload struct {
 		Blobs     []*[]byte
+		Files     []*os.File
 		Keys      []string
 		Folder    string
 		Thumbnail string
@@ -110,4 +114,9 @@ func ParserSize(size string) (uint, uint, error) {
 	width := uint(swidth)
 	height := uint(sheight)
 	return width, height, nil
+}
+
+func GetDefaultImg() (*[]byte, error) {
+	blob, err := ioutil.ReadFile(filepath.Join(conf.Config.Storage, conf.Config.DefaultImg))
+	return &blob, err
 }

@@ -43,11 +43,10 @@ type (
 		Expiration time.Duration `yaml:"-"`
 	}
 	aliyun struct {
-		Region          string `yaml:"region"`
+		Endpoint        string `yaml:"endpoint"`
 		AccessKeyId     string `yaml:"accessKeyId"`
 		AccessKeySecret string `yaml:"accessKeySecret"`
 		Bucket          string `yaml:"bucket"`
-		Secure          bool   `yaml:"secure"`
 	}
 	watermark struct {
 		Enable      bool    `yaml:"enable"`

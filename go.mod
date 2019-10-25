@@ -3,6 +3,7 @@ module image-server
 go 1.13
 
 require (
+	github.com/aliyun/aliyun-oss-go-sdk v2.0.3+incompatible
 	github.com/buzzxu/boys v0.0.0-20191020113752-d8dd33db2600
 	github.com/buzzxu/ironman v0.0.1 // indirect
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
@@ -16,6 +17,7 @@ require (
 	golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582 // indirect
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/gographics/imagick.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.2.4
 )
