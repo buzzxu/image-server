@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
 var (
@@ -58,7 +59,12 @@ func (image *Aliyun) Upload(upload *storage.Upload) ([]string, error) {
 	numfiles := len(upload.Blobs)
 	paths := make([]string, numfiles)
 	for index := 0; index < numfiles; index++ {
-		fileName := utils.NewFileName(upload.Folder, upload.Keys[index])
+		fileName := upload.Keys[index]
+		if upload.Rename {
+			fileName = utils.NewFileName(upload.Folder, fileName)
+		} else {
+			fileName = filepath.Join(upload.Folder, fileName)
+		}
 		if err := bucket.PutObject(fileName[1:], bytes.NewReader(*upload.Blobs[index])); err != nil {
 			return nil, err
 		}

@@ -10,6 +10,7 @@ import (
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
 	"image-server/pkg/imagemagick"
+	"image-server/pkg/redis"
 	"image-server/pkg/storage"
 	"image-server/pkg/utils"
 	"io/ioutil"
@@ -19,7 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Local struct {
@@ -32,25 +32,13 @@ const (
 )
 
 var url_prefix_length int
-var ticker *time.Ticker
 
 func (image *Local) Init() {
 	imagick.Initialize()
-	redisConnect()
+	redis.RedisConnect()
 	//加载默认图片到redis
 	loadDefaultImg()
 	url_prefix_length = len(conf.Config.Domain)
-	ticker = time.NewTicker(5 * time.Minute)
-
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				redisStats()
-			}
-		}
-	}()
-
 }
 
 func (image *Local) Check(params map[string]string) {
@@ -63,10 +51,10 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	numfiles := len(upload.Blobs)
-	paths := make([]string, numfiles)
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
+	numfiles := len(upload.Blobs)
+	paths := make([]string, numfiles)
 	/*ch := make(chan string, len(upload.FileNames))
 	for index, blob := range upload.Files {
 		//上传图片到本地硬盘
@@ -77,30 +65,39 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 	}*/
 	for index := 0; index < numfiles; index++ {
 		webp, exist := upload.Params["webp"]
-		newFileName := utils.NewFileName(upload.Folder, upload.Keys[index])
+		fileName := upload.Keys[index]
+		if upload.Rename {
+			fileName = utils.NewFileName(upload.Folder, fileName)
+		} else {
+			fileName = filepath.Join(upload.Folder, fileName)
+		}
+
 		if exist {
-			webpPath, err := generatorImage(upload.Blobs[index], newFileName, ".webp", upload.Resize, mw)
+			webpPath, err := generatorImage(upload.Blobs[index], fileName, ".webp", upload.Resize, mw)
 			if err != nil {
 				return nil, err
 			}
 			//如果只是转换图片类型操作就不需要保存原图
 			if webp[0] == "convert" {
-				newFileName = webpPath
-				paths[index] = newFileName
+				if conf.Config.Domain != "" {
+					paths[index] = conf.Config.Domain + webpPath
+				} else {
+					paths[index] = webpPath
+				}
 				continue
 			}
 		}
-		if err = mwStoreFile(newFileName, upload.Resize, upload.Blobs[index], mw); err != nil {
+		if err = mwStoreFile(fileName, upload.Resize, upload.Blobs[index], mw); err != nil {
 			return nil, err
 		}
 		//生成缩略图
 		if upload.Thumbnail != "" {
-			generatorThumbnailImage(upload.Blobs[index], newFileName, upload.Thumbnail, mw)
+			generatorThumbnailImage(upload.Blobs[index], fileName, upload.Thumbnail, mw)
 		}
 		if conf.Config.Domain != "" {
-			paths[index] = conf.Config.Domain + newFileName
+			paths[index] = conf.Config.Domain + fileName
 		} else {
-			paths[index] = newFileName
+			paths[index] = fileName
 		}
 	}
 	return paths, nil
@@ -127,15 +124,14 @@ func (image *Local) Delete(del *storage.Delete) (bool, error) {
 }
 func (image *Local) Destory() {
 	imagick.Terminate()
-	cache.Close()
-	ticker.Stop()
+	redis.Close()
 }
 
 func getDefaultImag() *[]byte {
-	blob, err := cache.Get(key_img_default).Bytes()
+	blob, err := redis.Client.Get(key_img_default).Bytes()
 	if err != nil {
 		loadDefaultImg()
-		blob, err = cache.Get(key_img_default).Bytes()
+		blob, err = redis.Client.Get(key_img_default).Bytes()
 	}
 	return &blob
 }
@@ -197,7 +193,7 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 
 func loadDefaultImg() {
 	if blob, error := storage.GetDefaultImg(); error == nil {
-		cache.Set(key_img_default, blob, 0)
+		redis.Client.Set(key_img_default, blob, 0)
 	} else {
 		log.Fatalf("读取默认图片[%s]失败,无法缓存图片", conf.Config.DefaultImg)
 	}
@@ -215,11 +211,11 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 	key := hex.EncodeToString(structs.Sha1(download, 1))
 	keyNotfound := key_prefix + key
 	//如果不存在此图像 直接返回404
-	if cache.Exists(keyNotfound).Val() > 0 {
+	if redis.Client.Exists(keyNotfound).Val() > 0 {
 		return getDefaultImag(), types.ErrNotFound
 	}
 	//从缓存中获取图像
-	blob, err = cache.Get(key).Bytes()
+	blob, err = redis.Client.Get(key).Bytes()
 	if blob == nil {
 		if download.Format == "webp" {
 			blob, err = readFileWebp(download.Context, download.Path)
@@ -227,12 +223,12 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		if blob == nil || err != nil {
 			// read image from local hard driver
 			if blob, err = readFile(download.Context, download.Path); err != nil {
-				cache.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
+				redis.Client.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
 				return getDefaultImag(), types.ErrNotFound
 			}
 		}
 		if blob != nil && !download.HasParams && download.Format == "webp" {
-			if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+			if err = redis.Client.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 				return getDefaultImag(), types.ErrorOf(err)
 			}
 			return &blob, nil
@@ -309,7 +305,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		//mw.SetAntialias(download.Antialias)
 		mw.StripImage()
 		blob = mw.GetImageBlob()
-		if err = cache.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+		if err = redis.Client.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 			return &blob, types.ErrorOf(err)
 		}
 	}

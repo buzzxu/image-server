@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 var limit int64
@@ -32,30 +34,53 @@ func upload(c echo.Context) error {
 		return E(c, types.NewHttpError(http.StatusBadRequest, "folder is nil"))
 	}
 	files, exists := form.File["file"]
-	if !exists {
-		return E(c, types.NewHttpError(http.StatusBadRequest, "file is nil"))
+	if !exists && c.FormValue("base64") == "" {
+		return E(c, types.NewHttpError(http.StatusBadRequest, "file or base64 is nil"))
+	}
+	var (
+		blobs     []*[]byte
+		fileNames []string
+	)
+	rename := true
+	if files != nil {
+		blobs = make([]*[]byte, len(files))
+		fileNames = make([]string, len(files))
+		for index, file := range files {
+			src, err := file.Open()
+			defer src.Close()
+			if err != nil {
+				return err
+			}
+			if file.Size > limit {
+				return E(c, types.NewHttpError(http.StatusRequestEntityTooLarge, conf.Config.SizeLimit))
+			}
+			buff := make([]byte, file.Size)
+			_, err = src.Read(buff)
+			if utils.IfImage(buff) {
+				blobs[index] = &buff
+				fileNames[index] = file.Filename
+			} else {
+				return E(c, types.NewHttpError(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
+			}
+		}
+	} else {
+		data := c.FormValue("base64")
+		image := data
+		index := strings.Index(data, ",")
+		if index > 0 {
+			image = data[index+1:]
+		}
+		blob, err := base64.StdEncoding.DecodeString(image)
+		if err != nil {
+			return jsonErrorHandler(err, c)
+		}
+		blobs = make([]*[]byte, 1)
+		fileNames = make([]string, 1)
+		blobs[0] = &blob
+		fileNames[0], _ = utils.GenFileNameByType(&blob)
+		rename = false
 	}
 
-	blobs := make([]*[]byte, len(files))
-	fileNames := make([]string, len(files))
-	for index, file := range files {
-		src, err := file.Open()
-		defer src.Close()
-		if err != nil {
-			return err
-		}
-		if file.Size > limit {
-			return E(c, types.NewHttpError(http.StatusRequestEntityTooLarge, conf.Config.SizeLimit))
-		}
-		buff := make([]byte, file.Size)
-		_, err = src.Read(buff)
-		if utils.IfImage(buff) {
-			blobs[index] = &buff
-			fileNames[index] = file.Filename
-		} else {
-			return E(c, types.NewHttpError(http.StatusBadRequest, fmt.Sprintf("%s不是图片,服务器拒绝上传", file.Filename)))
-		}
-	}
 	paths, err := storage.Storager.Upload(&storage.Upload{
 		Blobs:     blobs,
 		Keys:      fileNames,
@@ -63,6 +88,7 @@ func upload(c echo.Context) error {
 		Thumbnail: c.FormValue("thumbnail"),
 		Resize:    c.FormValue("resize"),
 		Params:    form.Value,
+		Rename:    rename,
 	})
 	if err != nil {
 		return jsonErrorHandler(err, c)

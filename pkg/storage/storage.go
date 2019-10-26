@@ -58,6 +58,7 @@ type (
 		Thumbnail string
 		Resize    string
 		Params    map[string][]string
+		Rename    bool
 	}
 	//读取的参数
 	Download struct {

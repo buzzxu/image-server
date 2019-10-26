@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/buzzxu/boys/types"
 	"github.com/satori/go.uuid"
 	"log"
 	"net/http"
@@ -52,6 +53,28 @@ func FileNameNewExt(filename string, extension string) string {
 	}
 	path := strings.TrimSuffix(filename, suffix)
 	return path + extension
+}
+
+func GenFileNameByType(data *[]byte) (string, error) {
+	if IfImage(*data) {
+		contentType := http.DetectContentType(*data)
+		id := strings.ReplaceAll(uuid.NewV4().String(), "-", "")
+		suffix := func() string {
+			switch contentType {
+			case "image/webp":
+				return ".webp"
+			case "image/jpeg", "images/jpg":
+				return ".jpg"
+			case "image/png":
+				return ".png"
+			case "image/gig":
+				return ".gif"
+			}
+			return ".webp"
+		}
+		return id + suffix(), nil
+	}
+	return "", types.NewError(400, "非图片禁止上传")
 }
 
 func MkDirExist(path string) error {

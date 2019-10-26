@@ -1,4 +1,4 @@
-package local
+package redis
 
 import (
 	"github.com/go-redis/redis/v7"
@@ -8,11 +8,13 @@ import (
 )
 
 // Redis 客户端
-var cache *redis.Client
+var Client *redis.Client
+
+var ticker *time.Ticker
 
 // RedisConnect Redis连接
-func redisConnect() {
-	cache = redis.NewClient(&redis.Options{
+func RedisConnect() {
+	Client = redis.NewClient(&redis.Options{
 		Addr:         conf.Config.Redis.Addr,
 		Password:     conf.Config.Redis.Password, // no password set
 		DB:           conf.Config.Redis.DB,       // use default DB
@@ -22,18 +24,33 @@ func redisConnect() {
 		WriteTimeout: 20 * time.Second,
 		PoolTimeout:  20 * time.Second,
 	})
-	if _, err := cache.Ping().Result(); err != nil {
+	if _, err := Client.Ping().Result(); err != nil {
 		log.Fatalf("Redis connect error.%s", err.Error())
 	}
 	log.Printf("Redis connect success")
+
+	ticker = time.NewTicker(5 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				RedisStats()
+			}
+		}
+	}()
 }
 
-func redisStats() {
-	poolStats := cache.PoolStats()
+func RedisStats() {
+	poolStats := Client.PoolStats()
 	log.Printf("Redis Stats:[TotalConns:%d,IdleConns:%d,StaleConns:%d,Hits:%d,Misses:%d]",
 		poolStats.TotalConns,
 		poolStats.IdleConns,
 		poolStats.StaleConns,
 		poolStats.Hits,
 		poolStats.Misses)
+}
+
+func Close() {
+	ticker.Stop()
+	Client.Close()
 }
