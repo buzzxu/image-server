@@ -16,8 +16,8 @@ watermark:
   text: none
 redis:
   addr: host.docker.internal:6379
-  db: 1
   password: none
+  db: 1
   poolSize: 0
   expire: 10800 #默认 3小时
 aliyun:

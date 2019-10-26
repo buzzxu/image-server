@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 )
 
 var (
@@ -77,19 +76,11 @@ func (image *Aliyun) Delete(del *storage.Delete) (bool, error) {
 	var err error
 	numfiles := len(del.Keys)
 	if numfiles == 1 {
-		if strings.Contains(del.Keys[0], url) {
-			err = bucket.DeleteObject(del.Keys[0][urlLength:])
-		} else {
-			err = bucket.DeleteObject(del.Keys[0][1:])
-		}
+		err = bucket.DeleteObject(del.Keys[0][urlLength:])
 	} else {
 		var keys = make([]string, len(del.Keys))
 		for index := 0; index < numfiles; index++ {
-			if strings.Contains(del.Keys[index], url) {
-				keys[index] = del.Keys[index][urlLength:]
-			} else {
-				keys[index] = del.Keys[index][1:]
-			}
+			keys[index] = del.Keys[index][urlLength:]
 		}
 		_, err = bucket.DeleteObjects(keys)
 	}

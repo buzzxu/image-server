@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Local struct {
@@ -31,6 +32,7 @@ const (
 )
 
 var url_prefix_length int
+var ticker *time.Ticker
 
 func (image *Local) Init() {
 	imagick.Initialize()
@@ -38,6 +40,17 @@ func (image *Local) Init() {
 	//加载默认图片到redis
 	loadDefaultImg()
 	url_prefix_length = len(conf.Config.Domain)
+	ticker = time.NewTicker(5 * time.Minute)
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				redisStats()
+			}
+		}
+	}()
+
 }
 
 func (image *Local) Check(params map[string]string) {
@@ -80,7 +93,7 @@ func (image *Local) Upload(upload *storage.Upload) ([]string, error) {
 		if err = mwStoreFile(newFileName, upload.Resize, upload.Blobs[index], mw); err != nil {
 			return nil, err
 		}
-
+		//生成缩略图
 		if upload.Thumbnail != "" {
 			generatorThumbnailImage(upload.Blobs[index], newFileName, upload.Thumbnail, mw)
 		}
@@ -115,6 +128,7 @@ func (image *Local) Delete(del *storage.Delete) (bool, error) {
 func (image *Local) Destory() {
 	imagick.Terminate()
 	cache.Close()
+	ticker.Stop()
 }
 
 func getDefaultImag() *[]byte {

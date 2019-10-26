@@ -1,9 +1,9 @@
 package local
 
 import (
-	"fmt"
 	"github.com/go-redis/redis/v7"
 	"image-server/pkg/conf"
+	"log"
 	"time"
 )
 
@@ -22,6 +22,18 @@ func redisConnect() {
 		WriteTimeout: 20 * time.Second,
 		PoolTimeout:  20 * time.Second,
 	})
-	pong, err := cache.Ping().Result()
-	fmt.Println(pong, err)
+	if _, err := cache.Ping().Result(); err != nil {
+		log.Fatalf("Redis connect error.%s", err.Error())
+	}
+	log.Printf("Redis connect success")
+}
+
+func redisStats() {
+	poolStats := cache.PoolStats()
+	log.Printf("Redis Stats:[TotalConns:%d,IdleConns:%d,StaleConns:%d,Hits:%d,Misses:%d]",
+		poolStats.TotalConns,
+		poolStats.IdleConns,
+		poolStats.StaleConns,
+		poolStats.Hits,
+		poolStats.Misses)
 }

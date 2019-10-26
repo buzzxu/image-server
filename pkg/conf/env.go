@@ -64,7 +64,7 @@ var Config *config
 func init() {
 	currentDir, _ := os.Getwd()
 	Config = load(currentDir + "/conf.yml")
-	println(fmt.Sprintf("Port:%x,Domain:%s,Type:%s,Storage:%s", Config.Port, Config.Domain, Config.Type, Config.Storage))
+	println(fmt.Sprintf("Port:%d,Domain:%s,Type:%s,Storage:%s", Config.Port, Config.Domain, Config.Type, Config.Storage))
 }
 
 func load(file string) *config {
