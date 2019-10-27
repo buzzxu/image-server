@@ -2,8 +2,6 @@ package local
 
 import (
 	"context"
-	"encoding/hex"
-	"github.com/buzzxu/boys/common/structs"
 	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -208,7 +206,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 	)
 	//key := strs.HashSHA1(download.URL)
 	//struct hashcode
-	key := hex.EncodeToString(structs.Sha1(download, 1))
+	key := download.Tag
 	keyNotfound := key_prefix + key
 	//如果不存在此图像 直接返回404
 	if redis.Client.Exists(keyNotfound).Val() > 0 {

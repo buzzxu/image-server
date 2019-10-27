@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"encoding/hex"
+	"github.com/buzzxu/boys/common/structs"
 	"github.com/labstack/echo/v4"
 	"image-server/pkg/conf"
 	"io/ioutil"
@@ -62,8 +64,7 @@ type (
 	}
 	//读取的参数
 	Download struct {
-		//Params    map[string]string  `hash:"-"`
-		//Blod      []byte
+		Tag       string `hash:"-"`
 		Path      string
 		FileName  string
 		URL       string          `hash:"-"`
@@ -102,6 +103,13 @@ func (d *Download) Thumbnail2WidthAndHeight() (uint, uint, error) {
 	return ParserSize(d.Thumbnail)
 }
 
+//生成etag
+func (d *Download) Etag() string {
+	if d.Tag == "" {
+		d.Tag = hex.EncodeToString(structs.Sha1(d, 1))
+	}
+	return d.Tag
+}
 func ParserSize(size string) (uint, uint, error) {
 	resize := strings.Split(size, "*")
 	swidth, err := strconv.ParseUint(resize[0], 10, 64)

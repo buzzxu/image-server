@@ -15,7 +15,10 @@ import (
 	"strings"
 )
 
-var limit int64
+var (
+	limit        int64
+	cacheControl string
+)
 
 func init() {
 	size, err := bytes.Parse(conf.Config.SizeLimit)
@@ -23,6 +26,7 @@ func init() {
 		log.Fatalf("图片限制尺寸值[%s]解析失败", conf.Config.SizeLimit)
 	}
 	limit = size
+	cacheControl = "public,max-age=" + strconv.Itoa(conf.Config.MaxAge)
 }
 func upload(c echo.Context) error {
 	form, err := c.MultipartForm()
@@ -145,6 +149,13 @@ func getImage(c echo.Context) error {
 		}
 	}
 	download.HasParams = len(c.QueryParams()) > 0
+	// cache
+	etag := `"` + download.Etag() + `"`
+	if match := c.Request().Header.Get("If-None-Match"); match != "" {
+		if strings.Contains(match, etag) {
+			return c.NoContent(http.StatusNotModified)
+		}
+	}
 	blob, contentType, err := storage.Storager.Download(download)
 	code := http.StatusOK
 	if err != nil {
@@ -158,8 +169,10 @@ func getImage(c echo.Context) error {
 		if code >= 500 {
 			c.Logger().Errorf("%s 读取失败,原因:%s", path, err.Error())
 		}
+	} else {
+		c.Response().Header().Set("Cache-Control", cacheControl)
+		c.Response().Header().Set("Content-Length", strconv.Itoa(len(*blob)))
+		c.Response().Header().Set("Etag", etag)
 	}
-	c.Response().Header().Set("Cache-Control", "public,max-age="+strconv.Itoa(conf.Config.MaxAge))
-	c.Response().Header().Set("Content-Length", strconv.Itoa(len(*blob)))
 	return c.Blob(code, contentType, *blob)
 }
