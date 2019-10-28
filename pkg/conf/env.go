@@ -35,12 +35,13 @@ type (
 	}
 
 	redis struct {
-		Addr       string        `yaml:"addr"`
-		Password   string        `yaml:"password"`
-		DB         int           `yaml:"db"`
-		PoolSize   int           `yaml:"poolSize"`
-		Expire     int32         `yaml:"expire"`
-		Expiration time.Duration `yaml:"-"`
+		Addr         string        `yaml:"addr"`
+		Password     string        `yaml:"password"`
+		DB           int           `yaml:"db"`
+		PoolSize     int           `yaml:"poolSize"`
+		MinIdleConns int           `yaml:"minIdle"`
+		Expire       int32         `yaml:"expire"`
+		Expiration   time.Duration `yaml:"-"`
 	}
 	aliyun struct {
 		Endpoint        string `yaml:"endpoint"`
@@ -149,6 +150,9 @@ func (r *redis) env() {
 	r.Expiration = time.Duration(r.Expire) * time.Second
 	if r.PoolSize == 0 {
 		r.PoolSize = runtime.NumCPU() * 20
+	}
+	if r.MinIdleConns == 0 {
+		r.MinIdleConns = r.PoolSize / 2
 	}
 	if r.Password == "none" {
 		r.Password = ""

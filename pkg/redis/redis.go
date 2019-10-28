@@ -19,10 +19,12 @@ func RedisConnect() {
 		Password:     conf.Config.Redis.Password, // no password set
 		DB:           conf.Config.Redis.DB,       // use default DB
 		PoolSize:     conf.Config.Redis.PoolSize,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 20 * time.Second,
-		PoolTimeout:  20 * time.Second,
+		MaxRetries:   3,
+		MinIdleConns: conf.Config.Redis.MinIdleConns,
+		DialTimeout:  1 * time.Second,
+		ReadTimeout:  500 * time.Millisecond,
+		WriteTimeout: 500 * time.Millisecond,
+		IdleTimeout:  60 * time.Second,
 	})
 	if _, err := Client.Ping().Result(); err != nil {
 		log.Fatalf("Redis connect error.%s", err.Error())
