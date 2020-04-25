@@ -1,25 +1,32 @@
 port: 3000
-domain: https://image.xingchenga.com
+domain: none
 uploadDir: /Users/xux/data/images
 maxAge: 31536000
+bodyLimit: 10M
+sizeLimit: 5M
 defaultImg: default.png
-type: local
+type: seaweed
 jwt:
   secret: 123456
-redis:
-  db: 1
-  addr: 127.0.0.1:6379
-  password:
-  poolSize: 110
-  expire: 10800 #默认 3小时
-aliyun:
-  region: xux
-  accessKeyId: xux
-  accessKeySecret: xux
-  bucket: xux
-  secure: true
+  algorithm: HS512
 watermark:
   enable: true
   color: red
   gravity: center
   text: jd.com
+redis:
+  addr: 127.0.0.1:6379
+  db: 1
+  password: none
+  poolSize: 110
+  expire: 10800 #默认 3小时
+aliyun:
+  endpoint: https://oss-cn-hongkong.aliyuncs.com
+  accessKeyId: LTAIQc238s2yBAay
+  accessKeySecret: 0El2qiinNGK8kl5COZNUgDiyedJ0Rg
+  bucket: sanyi-images
+seaweed:
+  masterUrl: http://121.36.154.79:9333
+  filer:
+    - http://121.36.154.79:18880
+  secret: mxbc@2020

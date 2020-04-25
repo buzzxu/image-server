@@ -6,6 +6,7 @@ import (
 	"image-server/pkg/storage"
 	"image-server/pkg/storage/aliyun"
 	"image-server/pkg/storage/local"
+	"image-server/pkg/storage/seaweedfs"
 	"image-server/routers"
 	"runtime"
 )
@@ -17,6 +18,8 @@ func init() {
 			return &local.Local{}
 		case "aliyun":
 			return &aliyun.Aliyun{}
+		case "seaweed":
+			return &seaweedfs.Seaweedfs{}
 		}
 		return &local.Local{}
 	})

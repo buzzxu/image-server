@@ -8,4 +8,5 @@ golang image server
 
 
 
-`docker run --rm -it -p 3000:3000/tcp -v /Users/xux/data/images:/data/images image-server:latest `
+`docker run --rm -it -p 3000:3000/tcp -v /Users/xux/data/images:/data/images buzzxu/image-server:latest `
+

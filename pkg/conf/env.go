@@ -26,6 +26,7 @@ type (
 		JWT        *jwt       `yaml:"jwt"`
 		Redis      *redis     `yaml:"redis"`
 		Aliyun     *aliyun    `yaml:"aliyun"`
+		Seaweed    *seaweed   `yaml:"seaweed"`
 		WaterMark  *watermark `yarml:"watermark"`
 	}
 
@@ -48,6 +49,12 @@ type (
 		AccessKeyId     string `yaml:"accessKeyId"`
 		AccessKeySecret string `yaml:"accessKeySecret"`
 		Bucket          string `yaml:"bucket"`
+	}
+	seaweed struct {
+		MasterUrl string   `yaml:"masterUrl"`
+		Filer     []string `yaml:"filer"`
+		Secret    string   `yaml:"secret"`
+		ExpiresAt int64    `yaml:"exipre"`
 	}
 	watermark struct {
 		Enable      bool    `yaml:"enable"`
@@ -92,6 +99,10 @@ func load(file string) *config {
 			Font:      "cochin.ttc",
 			PointSize: 36,
 			Color:     "white",
+		},
+		Seaweed: &seaweed{
+			MasterUrl: "http://121.36.154.79:9333",
+			Filer:     []string{"http://121.36.154.79:18880/"},
 		},
 	}
 	if isConfExsits(file) {
