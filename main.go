@@ -6,6 +6,7 @@ import (
 	"image-server/pkg/storage"
 	"image-server/pkg/storage/aliyun"
 	"image-server/pkg/storage/local"
+	"image-server/pkg/storage/minio"
 	"image-server/pkg/storage/seaweedfs"
 	"image-server/routers"
 	"runtime"
@@ -20,6 +21,8 @@ func init() {
 			return &aliyun.Aliyun{}
 		case "seaweed":
 			return &seaweedfs.Seaweedfs{}
+		case "minio":
+			return &minio.Minio{}
 		}
 		return &local.Local{}
 	})
@@ -29,6 +32,7 @@ func main() {
 
 	runtime.GOMAXPROCS(conf.Config.MaxProc)
 	storage.Storager.Init()
+	storage.Storager.Check(nil)
 	defer storage.Storager.Destory()
 
 	echo := routers.New()

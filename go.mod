@@ -7,9 +7,11 @@ require (
 	github.com/buzzxu/boys v0.0.0-20200425104259-e09bafc2feae
 	github.com/buzzxu/ironman v0.0.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-ini/ini v1.55.0 // indirect
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/labstack/gommon v0.3.0
+	github.com/minio/minio-go/v6 v6.0.55
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
 	golang.org/x/net v0.0.0-20200421231249-e086a090c8fd // indirect

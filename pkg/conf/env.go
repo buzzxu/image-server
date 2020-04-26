@@ -27,6 +27,7 @@ type (
 		Redis      *redis     `yaml:"redis"`
 		Aliyun     *aliyun    `yaml:"aliyun"`
 		Seaweed    *seaweed   `yaml:"seaweed"`
+		Minio      *minio     `yaml:"minio"`
 		WaterMark  *watermark `yarml:"watermark"`
 	}
 
@@ -55,6 +56,14 @@ type (
 		Filer     []string `yaml:"filer"`
 		Secret    string   `yaml:"secret"`
 		ExpiresAt int64    `yaml:"exipre"`
+	}
+	minio struct {
+		Endpoint  string `yaml:"endpoint"`
+		AccessKey string `yaml:"accessKey"`
+		SecretKey string `yaml:"secretKey"`
+		UseSSL    bool   `yaml:"useSSL"`
+		Bucket    string `yaml:"bucket"`
+		Location  string `yaml:"location"`
 	}
 	watermark struct {
 		Enable      bool    `yaml:"enable"`
@@ -103,6 +112,10 @@ func load(file string) *config {
 		Seaweed: &seaweed{
 			MasterUrl: "http://121.36.154.79:9333",
 			Filer:     []string{"http://121.36.154.79:18880/"},
+		},
+		Minio: &minio{
+			Bucket:   "buzzxu",
+			Location: "cn-north-1",
 		},
 	}
 	if isConfExsits(file) {

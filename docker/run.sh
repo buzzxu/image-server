@@ -55,6 +55,21 @@ do
  --aliyun-bucket)
     sed -i "27s/xux/$2/g" $CONFIG_FILE
     shift 2;;
+ --minio-endpoint)
+    sed -i "29s/127.0.0.1:9001/$2/g" $CONFIG_FILE
+    shift 2;;
+ --minio-accessKey)
+    sed -i "30s/xuxiang/$2/g" $CONFIG_FILE
+    shift 2;;
+ --minio-secretKey)
+    sed -i "31s/111111/$2/g" $CONFIG_FILE
+    shift 2;;
+ --minio-bucket)
+    sed -i "32s/buzzxu/$2/g" $CONFIG_FILE
+    shift 2;;
+ --minio-useSSL)
+    sed -i "33s/false/$2/g" $CONFIG_FILE
+    shift 2;;
  *) echo " unknow prop $1";shift;;
  esac
 done

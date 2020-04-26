@@ -25,3 +25,9 @@ aliyun:
   accessKeyId: xux
   accessKeySecret: xux
   bucket: xux
+minio:
+  endpoint: 127.0.0.1:9001
+  accessKey: xuxiang
+  secretKey: 111111
+  bucket: buzzxu
+  useSSL: false

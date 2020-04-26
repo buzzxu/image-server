@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -65,7 +66,7 @@ func (image *Aliyun) Upload(upload *storage.Upload) ([]string, error) {
 		} else {
 			fileName = filepath.Join(upload.Folder, fileName)
 		}
-		if err := bucket.PutObject(fileName[1:], bytes.NewReader(*upload.Blobs[index])); err != nil {
+		if err := bucket.PutObject(strings.TrimPrefix(fileName, "/"), bytes.NewReader(*upload.Blobs[index])); err != nil {
 			return nil, err
 		}
 		paths[index] = url + fileName

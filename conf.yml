@@ -5,7 +5,7 @@ maxAge: 31536000
 bodyLimit: 10M
 sizeLimit: 5M
 defaultImg: default.png
-type: seaweed
+type: minio
 jwt:
   secret: 123456
   algorithm: HS512
@@ -26,7 +26,14 @@ aliyun:
   accessKeySecret: 0El2qiinNGK8kl5COZNUgDiyedJ0Rg
   bucket: sanyi-images
 seaweed:
-  masterUrl: http://121.36.154.79:9333
+  masterUrl: http://127.0.0.1:9333
   filer:
-    - http://121.36.154.79:18880
-  secret: mxbc@2020
+    - http://127.0.0.1:18880
+  secret: 111111
+minio:
+  endpoint: 127.0.0.1:9001
+  accessKey: xuxiang
+  secretKey: 111111
+  bucket: buzzxu
+  useSSL: false
+
