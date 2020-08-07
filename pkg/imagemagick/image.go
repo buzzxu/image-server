@@ -1,6 +1,7 @@
 package imagemagick
 
 import (
+	"fmt"
 	"github.com/buzzxu/boys/types"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
@@ -74,4 +75,28 @@ func zoom(size string, mgw *imagick.MagickWand, call func(width uint, height uin
 		return call(width/v, height/v)
 	}
 	return nil
+}
+
+//裁剪
+func Crop(width, height uint, x, y int, mgw *imagick.MagickWand) error {
+	imCols := mgw.GetImageWidth()
+	imRows := mgw.GetImageHeight()
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	if uint(x) >= imCols || uint(y) >= imRows {
+		return fmt.Errorf("x, y more than image width, height")
+	}
+
+	if width == 0 || imCols < uint(x)+width {
+		width = imCols - uint(x)
+	}
+
+	if height == 0 || imRows < uint(y)+height {
+		height = imRows - uint(y)
+	}
+	return mgw.CropImage(width, height, x, y)
 }

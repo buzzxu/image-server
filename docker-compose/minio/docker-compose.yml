@@ -1,0 +1,17 @@
+version: '2.4'
+services:
+  image:
+    image: buzzxu/image-server:latest
+    container_name: image
+    mem_limit: 500m
+    cpu_count: 2
+    cpus: 0.25
+    ports:
+      - 7589:3000
+    expose:
+      - 3000
+    hostname: image
+    command: --type minio --jwt-secret ${IMAGE_SECRET}  --minio-endpoint ${MINIO_ENDPOINT} --minio-accessKey ${MINIO_ACCESSKEY} --minio-secretKey ${MINIO_SECRETKEY} --minio-bucket ${MINIO_BUCKET}
+    restart: always
+    volumes:
+      - /data/logs/images:/data/logs

@@ -5,7 +5,7 @@ maxAge: 31536000
 bodyLimit: 10M
 sizeLimit: 5M
 defaultImg: default.png
-type: minio
+type: none
 jwt:
   secret: 123456
   algorithm: HS512

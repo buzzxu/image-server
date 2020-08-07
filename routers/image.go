@@ -60,7 +60,7 @@ func upload(c echo.Context) error {
 			}
 			buff := make([]byte, file.Size)
 			_, err = src.Read(buff)
-			if utils.IfImage(buff) {
+			if flag, _ := utils.IfImage(buff); flag {
 				blobs[index] = &buff
 				fileNames[index] = file.Filename
 			} else {

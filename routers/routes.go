@@ -12,6 +12,8 @@ func Register(echo *echo.Echo) {
 	boss(bGroup)
 	gGroup := echo.Group("/images")
 	images(gGroup)
+	funsGroup := echo.Group("/funs")
+	funs(funsGroup)
 }
 
 var jwt = middleware.JWTWithConfig(middleware.JWTConfig{
@@ -43,4 +45,9 @@ func images(group *echo.Group) {
 	group.GET("/:folder0/:folder1/:folder2/:folder3/:folder4/:folder5/:folder6/:folder7/:filename", getImage)
 	group.POST("/upload", upload, jwt, middleware.BodyLimit(conf.Config.BodyLimit))
 	group.DELETE("/delete", del, jwt)
+}
+
+func funs(group *echo.Group) {
+	//裁剪
+	group.POST("/crop", crop)
 }

@@ -47,7 +47,7 @@ RUN cd && \
     mv app  /opt/app;
 
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 MAINTAINER buzzxu <downloadxu@163.com>
 

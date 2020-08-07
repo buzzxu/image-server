@@ -146,7 +146,7 @@ func delLocalHard(file string, context context.Context, logger echo.Logger, wg *
 	if blob, err := readFile(context, file); err != nil {
 		logger.Errorf("文件:%s,删除失败,原因:无法获取图片信息", file)
 	} else {
-		if utils.IfImage(blob) {
+		if flag, _ := utils.IfImage(blob); flag {
 			suffix := filepath.Ext(file)
 			path := strings.TrimSuffix(file, suffix)
 			files, err := filepath.Glob(filepath.Join(conf.Config.Storage, path) + "*")

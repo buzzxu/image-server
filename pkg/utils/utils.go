@@ -13,15 +13,14 @@ import (
 
 /**
  */
-func IfImage(buff []byte) bool {
-	filetype := http.DetectContentType(buff)
-	switch filetype {
+func IfImage(buff []byte) (bool, string) {
+	contentType := http.DetectContentType(buff)
+	switch contentType {
 	case "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/png":
-		return true
+		return true, contentType
 	default:
-		return false
+		return false, ""
 	}
-	return true
 }
 
 var magicTable = map[string]string{
@@ -56,8 +55,7 @@ func FileNameNewExt(filename string, extension string) string {
 }
 
 func GenFileNameByType(data *[]byte) (string, error) {
-	if IfImage(*data) {
-		contentType := http.DetectContentType(*data)
+	if flag, contentType := IfImage(*data); flag {
 		id := strings.ReplaceAll(uuid.NewV4().String(), "-", "")
 		suffix := func() string {
 			switch contentType {
@@ -75,6 +73,12 @@ func GenFileNameByType(data *[]byte) (string, error) {
 		return id + suffix(), nil
 	}
 	return "", types.NewError(400, "非图片禁止上传")
+}
+func Base64ImagePrefix(data *[]byte) (string, error) {
+	if flag, contentType := IfImage(*data); flag {
+		return "data:" + contentType + ";base64,", nil
+	}
+	return "", types.NewError(400, "非图片无法区分图片类型")
 }
 
 func MkDirExist(path string) error {

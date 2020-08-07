@@ -1,0 +1,24 @@
+version: '2.4'
+
+# starts 4 docker containers running minio server instances. Each
+# minio server's web interface will be accessible on the host at port
+# 9001 through 9004.
+services:
+  image:
+    image: buzzxu/image-server:latest
+    container_name: image
+    mem_limit: 2gb
+    cpu_count: 4
+    cpus: 0.5
+    ports:
+      - 7589:3000
+    expose:
+      - 3000
+    hostname: image
+    command: --jwt-secret ${IMAGE_SECRET}  --redis-addr redis:6379 --redis-password ${REDIS_PASSWORD}
+    restart: always
+    depends_on:
+      - redis
+    volumes:
+      - /data/logs/images:/data/logs
+      - /data/files/images:/data/images
