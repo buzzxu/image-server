@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"github.com/buzzxu/boys/types"
@@ -16,6 +17,10 @@ import (
 	"strings"
 )
 
+var tr = &http.Transport{
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
 /**
 裁剪
 */
@@ -27,7 +32,18 @@ func crop(c echo.Context) error {
 	var blob *[]byte
 	url := c.FormValue("url")
 	if url != "" {
-		resp, err := http.Get(url)
+		var (
+			resp *http.Response
+			err  error
+		)
+		if strings.HasPrefix(url, "https") {
+			c := &http.Client{
+				Transport: tr,
+			}
+			resp, err = c.Get(url)
+		} else {
+			resp, err = http.Get(url)
+		}
 		if err != nil {
 			return err
 		}
