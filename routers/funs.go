@@ -12,7 +12,6 @@ import (
 	"image-server/pkg/utils"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -21,9 +20,7 @@ var tr = &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
-/**
-裁剪
-*/
+//裁剪
 func crop(c echo.Context) error {
 	params := c.FormValue("params")
 	if params == "" {
@@ -32,25 +29,11 @@ func crop(c echo.Context) error {
 	var blob *[]byte
 	url := c.FormValue("url")
 	if url != "" {
-		var (
-			resp *http.Response
-			err  error
-		)
-		if strings.HasPrefix(url, "https") {
-			c := &http.Client{
-				Transport: tr,
-			}
-			resp, err = c.Get(url)
-		} else {
-			resp, err = http.Get(url)
-		}
+		var err error
+		blob, err = utils.GetUrlBuffer(url)
 		if err != nil {
-			return err
+			return jsonErrorHandler(err, c)
 		}
-		defer resp.Body.Close()
-		buff, err := ioutil.ReadAll(resp.Body)
-		blob = &buff
-
 	} else if c.FormValue("base64") != "" {
 		data := c.FormValue("base64")
 		image := data
@@ -96,4 +79,17 @@ func crop(c echo.Context) error {
 		return jsonErrorHandler(err, c)
 	}
 	return c.JSON(200, datas)
+}
+
+//合并
+func composite(c echo.Context) error {
+	var composites []knife.CompositeParam
+	if err := c.Bind(&composites); err != nil {
+		return jsonErrorHandler(err, c)
+	}
+	blob, err := knife.Composite(composites)
+	if err != nil {
+		return jsonErrorHandler(err, c)
+	}
+	return c.Blob(200, "image/png", *blob)
 }

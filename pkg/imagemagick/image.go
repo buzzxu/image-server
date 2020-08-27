@@ -5,6 +5,7 @@ import (
 	"github.com/buzzxu/boys/types"
 	"gopkg.in/gographics/imagick.v3/imagick"
 	"image-server/pkg/conf"
+	"image-server/pkg/objects"
 	"image-server/pkg/storage"
 	"strconv"
 	"strings"
@@ -34,6 +35,22 @@ func WaterMark(mgw *imagick.MagickWand) {
 		dw.Annotation(0, 0, waterMark.Text)
 		mgw.DrawImage(dw)
 	}
+}
+
+//添加文字
+func AppendText(mgw *imagick.MagickWand, x, y float64, text string, font *objects.Font) {
+	dw := imagick.NewDrawingWand()
+	pw := imagick.NewPixelWand()
+	defer dw.Destroy()
+	defer pw.Destroy()
+	pw.SetColor(font.Color)
+	dw.SetFillColor(pw)
+	dw.SetTextEncoding("UTF-8")
+	dw.SetFontSize(font.Size)
+	dw.SetGravity(font.Gravity())
+	dw.SetFont(font.Name)
+	dw.Annotation(x, y, text)
+	mgw.DrawImage(dw)
 }
 
 //缩放
@@ -99,4 +116,10 @@ func Crop(width, height uint, x, y int, mgw *imagick.MagickWand) error {
 		height = imRows - uint(y)
 	}
 	return mgw.CropImage(width, height, x, y)
+}
+
+func Composite(mgw *imagick.MagickWand, blob *[]byte, x, y int) error {
+	source := imagick.NewMagickWand()
+	source.ReadImageBlob(*blob)
+	return mgw.CompositeImage(source, imagick.COMPOSITE_OP_SRC_IN, true, x, y)
 }

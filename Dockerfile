@@ -104,6 +104,7 @@ RUN apt-get update && \
 ADD docker/conf.yml /app/conf.yml
 ADD docker/run.sh /app/run.sh
 ADD docker/default.png /data/images
+ADD assets/msyh.ttf /data/msyh.ttf
 
 ENV TZ Asia/Shanghai
 ENV LANG C.UTF-8

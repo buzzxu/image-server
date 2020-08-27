@@ -50,4 +50,6 @@ func images(group *echo.Group) {
 func funs(group *echo.Group) {
 	//裁剪
 	group.POST("/crop", crop)
+	//裁剪
+	group.POST("/composite", composite)
 }

@@ -1,9 +1,17 @@
 package utils
 
 import (
+	"bytes"
+	"crypto/tls"
 	"fmt"
 	"github.com/buzzxu/boys/types"
 	"github.com/satori/go.uuid"
+	"image"
+	"image/color"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -97,4 +105,90 @@ func MkDirExist(path string) error {
 		}
 	}
 	return nil
+}
+
+func Byte2Image(data *[]byte) (img image.Image, err error) {
+	filetype := http.DetectContentType(*data)
+	switch filetype {
+	case "image/jpeg", "image/jpg":
+		img, err = jpeg.Decode(bytes.NewBuffer(*data))
+		if err != nil {
+			fmt.Println("jpeg error")
+			return nil, err
+		}
+	case "image/gif":
+		img, err = gif.Decode(bytes.NewBuffer(*data))
+		if err != nil {
+			return nil, err
+		}
+	case "image/png":
+		img, err = png.Decode(bytes.NewBuffer(*data))
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, err
+	}
+	return img, nil
+}
+
+//解析 Hex
+func ParseHexColor(s string) (c color.RGBA, err error) {
+	c.A = 0xff
+	switch len(s) {
+	case 7:
+		_, err = fmt.Sscanf(s, "#%02x%02x%02x", &c.R, &c.G, &c.B)
+	case 4:
+		_, err = fmt.Sscanf(s, "#%1x%1x%1x", &c.R, &c.G, &c.B)
+		// Double the hex digits:
+		c.R *= 17
+		c.G *= 17
+		c.B *= 17
+	default:
+		err = fmt.Errorf("invalid length, must be 7 or 4")
+
+	}
+	return
+}
+
+var tr = &http.Transport{
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
+func GetUrlReader(url string) (r *bytes.Reader, err error) {
+	buff, err := GetUrlBuffer(url)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(*buff), nil
+}
+
+func GetUrlBuffer(url string) (*[]byte, error) {
+	var err error
+	if url[0:4] == "file" {
+		buff, err := ioutil.ReadFile(url[6:])
+		if err != nil {
+			return nil, err
+		}
+		return &buff, nil
+	} else {
+		var resp *http.Response
+		if url[0:5] == "https" {
+			c := &http.Client{
+				Transport: tr,
+			}
+			resp, err = c.Get(url)
+		} else {
+			resp, err = http.Get(url)
+		}
+		defer resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		buff, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return &buff, nil
+	}
 }

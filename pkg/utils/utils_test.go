@@ -13,3 +13,8 @@ func TestNewFileName(t *testing.T) {
 	fmt.Println(strings.HasSuffix("50%", "%"))
 
 }
+
+func TestGetUrlBuffer(t *testing.T) {
+	s := "file://data/img/a.jpg"
+	fmt.Println(s[6:])
+}

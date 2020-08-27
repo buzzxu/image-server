@@ -134,9 +134,6 @@ func load(file string) *config {
 	if c.MaxProc == 0 {
 		c.MaxProc = runtime.NumCPU()
 	}
-	if c.WaterMark.Enable {
-		c.WaterMark.convertGravityType()
-	}
 	if c.Type == "local" {
 		c.Redis.env()
 	}
@@ -147,27 +144,28 @@ func load(file string) *config {
 }
 
 func (e watermark) GravityType() imagick.GravityType {
-	return e.gravityType
-}
-func (e *watermark) convertGravityType() {
 	gravity := strings.ToLower(e.Gravity)
 	switch gravity {
 	case "center":
-		e.gravityType = imagick.GRAVITY_CENTER
-		break
+		return imagick.GRAVITY_CENTER
+	case "left":
+		return imagick.GRAVITY_WEST
+	case "right":
+		return imagick.GRAVITY_EAST
+	case "top":
+		return imagick.GRAVITY_NORTH
+	case "bottom":
+		return imagick.GRAVITY_SOUTH
 	case "northwest":
-		e.gravityType = imagick.GRAVITY_NORTH_WEST
-		break
+		return imagick.GRAVITY_NORTH_WEST
 	case "northeast":
-		e.gravityType = imagick.GRAVITY_NORTH_EAST
-		break
+		return imagick.GRAVITY_NORTH_EAST
 	case "southwest":
-		e.gravityType = imagick.GRAVITY_SOUTH_WEST
-		break
+		return imagick.GRAVITY_SOUTH_WEST
 	case "southeast":
-		e.gravityType = imagick.GRAVITY_SOUTH_EAST
-		break
+		return imagick.GRAVITY_SOUTH_EAST
 	}
+	return imagick.GRAVITY_CENTER
 }
 
 func (r *redis) env() {

@@ -1,0 +1,68 @@
+[
+  {
+    "text": "笔船一日游",
+    "x": 300,
+    "y": 900,
+    "font": {
+      "size": 30,
+      "color": "#333333"
+    }
+  },
+  {
+    "url": "https://qn-album.meetb.cn/506b4202008181936506586.jpg",
+    "x": 309,
+    "y": 669,
+    "width": 132,
+    "height": 132
+  },
+  {
+    "url": "https://node.meetb.cn/img/posters/project_detail.png",
+    "x": 0,
+    "y": 0,
+    "width": 750,
+    "height": 1334
+  },
+  {
+    "text": "姚木木",
+    "x": 335,
+    "y": 840,
+    "font": {
+      "size": 30,
+      "color": "#333333"
+    }
+  },
+  {
+    "text": "￥999",
+    "x": 25,
+    "y": 615,
+    "font": {
+      "size": 42,
+      "color": "#ffffff"
+    }
+  },
+  {
+    "text": "2020/09/08",
+    "x": 30,
+    "y": 700,
+    "font": {
+      "size": 26,
+      "color": "#ffffff"
+    }
+  },
+  {
+    "text": "绿地中心",
+    "x": 610,
+    "y": 700,
+    "font": {
+      "size": 26,
+      "color": "#ffffff"
+    }
+  },
+  {
+    "url": "https://source.meetb.cn/inst_travel/posters/share_program/64/4856a0b28c9ee4fbbb3d595059576846(140x140)_qr.png",
+    "x": 258,
+    "y": 960,
+    "width": 234,
+    "height": 234
+  }
+]
