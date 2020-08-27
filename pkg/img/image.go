@@ -22,7 +22,7 @@ func init() {
 		currentDir, _ := os.Getwd()
 		fontType, err = LoadTextType(currentDir + "/assets/msyh.ttf")
 		if err != nil {
-			fontType, err = LoadTextType(currentDir + "/data/msyh.ttf")
+			fontType, err = LoadTextType("/app/msyh.ttf")
 			if err != nil {
 				log.Fatalf("读取配置文件内容失败,%v ", err)
 			}
