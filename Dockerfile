@@ -78,7 +78,7 @@ RUN apt-get update && \
 #    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
 #    ldconfig  && \
     cd  /tmp && \
-	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
+	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
 	tar -xvf ImageMagick.tar.gz && \
 	cd ImageMagick* && \
 	./configure --prefix=/usr \
