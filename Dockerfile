@@ -45,7 +45,6 @@ RUN cd && \
     rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
     cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
     go build -o app; \
-    cp $GOPATH/src/image-server
     mv app  /opt/app;
 
 
