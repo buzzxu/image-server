@@ -28,6 +28,7 @@ RUN cd && \
     	    --disable-openmp \
     	    --with-gvc=no \
     	    --disable-docs && \
+    	pwd && \
     	make -j$(nproc) && make install && \
     	ldconfig /usr/local/lib && \
     export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
@@ -44,6 +45,7 @@ RUN cd && \
     rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
     cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
     go build -o app; \
+    cp $GOPATH/src/image-server
     mv app  /opt/app;
 
 
