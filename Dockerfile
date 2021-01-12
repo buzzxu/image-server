@@ -54,6 +54,7 @@ MAINTAINER buzzxu <downloadxu@163.com>
 
 WORKDIR /app
 COPY --from=build /opt/app /app
+COPY --form=build /root/ImageMagick.tar.gz /tmp/ImageMagick.tar.gz
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -79,7 +80,7 @@ RUN apt-get update && \
 #    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
 #    ldconfig  && \
     cd  /tmp && \
-	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
+#	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
 	tar -xvf ImageMagick.tar.gz && \
 	cd ImageMagick* && \
 	./configure --prefix=/usr \
