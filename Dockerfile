@@ -19,7 +19,7 @@ RUN apt-get update && \
 RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev --no-install-recommends;
 
 RUN cd && \
-    	wget http://www.imagemagick.org/download/ImageMagick.tar.gz && \
+    	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
     	tar -xvf ImageMagick.tar.gz && \
     	cd ImageMagick* && \
     	./configure --prefix=/usr \
