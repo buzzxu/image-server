@@ -22,7 +22,7 @@ redis:
   poolSize: 0
   expire: 10800 #默认 3小时
 aliyun:
-  endpoint: oss-cn-hangzhou.aliyuncs.com
+  endpoint: none
   accessKeyId: xux
   accessKeySecret: xux
   bucket: xux
