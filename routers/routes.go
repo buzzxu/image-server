@@ -14,6 +14,9 @@ func Register(echo *echo.Echo) {
 	images(gGroup)
 	funsGroup := echo.Group("/funs")
 	funs(funsGroup)
+
+	qrCodeGroup := echo.Group("/qrCode")
+	funs(qrCodeGroup)
 }
 
 var jwt = middleware.JWTWithConfig(middleware.JWTConfig{
@@ -52,4 +55,8 @@ func funs(group *echo.Group) {
 	group.POST("/crop", crop)
 	//合并
 	group.POST("/composite", composite)
+}
+
+func qrCode(group *echo.Group) {
+
 }

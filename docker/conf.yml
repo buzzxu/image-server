@@ -16,6 +16,7 @@ watermark:
   text: none
 redis:
   addr: host.docker.internal:6379
+  user: none
   password: none
   db: 1
   poolSize: 0

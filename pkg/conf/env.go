@@ -38,6 +38,7 @@ type (
 
 	redis struct {
 		Addr         string        `yaml:"addr"`
+		User         string        `yaml:"user"`
 		Password     string        `yaml:"password"`
 		DB           int           `yaml:"db"`
 		PoolSize     int           `yaml:"poolSize"`
@@ -100,6 +101,7 @@ func load(file string) *config {
 			Addr:     "127.0.0.1:6379",
 			DB:       1,
 			PoolSize: runtime.NumCPU() * 20,
+			User:     "",
 			Password: "",
 			Expire:   10800},
 		WaterMark: &watermark{
