@@ -17,7 +17,6 @@ import (
 var (
 	client     *oss.Client
 	bucket     *oss.Bucket
-	url        string
 	defaultImg *[]byte
 	urlLength  int
 )
@@ -27,7 +26,7 @@ type Aliyun struct {
 
 func (image *Aliyun) Init() {
 	var err error
-	if client, err = oss.New(conf.Config.Aliyun.Endpoint, conf.Config.Aliyun.AccessKeyId, conf.Config.Aliyun.AccessKeySecret); err != nil {
+	if client, err = oss.New(""+conf.Config.Aliyun.Endpoint, conf.Config.Aliyun.AccessKeyId, conf.Config.Aliyun.AccessKeySecret); err != nil {
 		log.Fatalf("阿里云")
 	}
 	if bucket, err = client.Bucket(conf.Config.Aliyun.Bucket); err != nil {
@@ -39,15 +38,10 @@ func (image *Aliyun) Init() {
 			log.Fatalf("重新获取Bucket[%s] 失败,原因 %s", conf.Config.Aliyun.Bucket, err.Error())
 		}
 	}
-	if conf.Config.Domain == "" {
-		url = conf.Config.Aliyun.Endpoint[:8] + conf.Config.Aliyun.Bucket + "." + conf.Config.Aliyun.Endpoint[8:]
-	} else {
-		url = conf.Config.Domain
-	}
+
 	if defaultImg, err = storage.GetDefaultImg(); err != nil {
 		log.Fatalf("默认图片加载失败,原因 %s", err.Error())
 	}
-	urlLength = len(url) + 1
 }
 
 func (image *Aliyun) Check(params map[string]string) {
@@ -69,7 +63,7 @@ func (image *Aliyun) Upload(upload *storage.Upload) ([]string, error) {
 		if err := bucket.PutObject(strings.TrimPrefix(fileName, "/"), bytes.NewReader(*upload.Blobs[index])); err != nil {
 			return nil, err
 		}
-		paths[index] = url + fileName
+		paths[index] = fileName
 	}
 	return paths, nil
 }

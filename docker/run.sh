@@ -47,7 +47,7 @@ do
     sed -i "23/10800/$2/g" $CONFIG_FILE
     shift 2;;
  --aliyun-endpoint)
-    sed -i "25s/http://oss-cn-hangzhou.aliyuncs.com/$2/g" $CONFIG_FILE
+    sed -i "25s/oss-cn-hangzhou.aliyuncs.com/$2/g" $CONFIG_FILE
     shift 2;;
  --aliyun-accesskey-id)
     sed -i "26s/xux/$2/g" $CONFIG_FILE

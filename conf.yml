@@ -4,8 +4,8 @@ uploadDir: /Users/xux/data/images
 maxAge: 31536000
 bodyLimit: 10M
 sizeLimit: 5M
-defaultImg: default.png
-type: none
+defaultImg: default.jpg
+type: aliyun
 jwt:
   secret: 123456
   algorithm: HS512
@@ -21,10 +21,10 @@ redis:
   poolSize: 110
   expire: 10800 #默认 3小时
 aliyun:
-  endpoint: https://oss-cn-hongkong.aliyuncs.com
-  accessKeyId: LTAIQc238s2yBAay
-  accessKeySecret: 0El2qiinNGK8kl5COZNUgDiyedJ0Rg
-  bucket: sanyi-images
+  endpoint: oss-cn-shanghai.aliyuncs.com
+  accessKeyId: LTAI15tGCWMr5g5jbRCUby9Zd
+  accessKeySecret: Nus2Y1EMjxONO7yYKZbPuM52RKQ2hLR
+  bucket: xwjd
 seaweed:
   masterUrl: http://127.0.0.1:9333
   filer:
