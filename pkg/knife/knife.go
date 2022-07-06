@@ -153,3 +153,7 @@ func Composite(composites []CompositeParam) (*[]byte, error) {
 	blob := buf.Bytes()
 	return &blob, nil
 }
+
+func Convert(blobs []*[]byte, fileNames []string, target string, is_rename bool) (*[]byte, error) {
+	return nil, nil
+}

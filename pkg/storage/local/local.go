@@ -126,10 +126,11 @@ func (image *Local) Destory() {
 }
 
 func getDefaultImag() *[]byte {
-	blob, err := redis.Client.Get(key_img_default).Bytes()
+	var ctx = context.Background()
+	blob, err := redis.Client.Get(ctx, key_img_default).Bytes()
 	if err != nil {
 		loadDefaultImg()
-		blob, err = redis.Client.Get(key_img_default).Bytes()
+		blob, err = redis.Client.Get(ctx, key_img_default).Bytes()
 	}
 	return &blob
 }
@@ -191,7 +192,7 @@ func uploadToLocalHard(fileName string, blob *[]byte, upload *storage.Upload, mw
 
 func loadDefaultImg() {
 	if blob, error := storage.GetDefaultImg(); error == nil {
-		redis.Client.Set(key_img_default, blob, 0)
+		redis.Client.Set(context.Background(), key_img_default, blob, 0)
 	} else {
 		log.Fatalf("读取默认图片[%s]失败,无法缓存图片", conf.Config.DefaultImg)
 	}
@@ -204,16 +205,17 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		err  error
 		mw   *imagick.MagickWand
 	)
+	var ctx = context.Background()
 	//key := strs.HashSHA1(download.URL)
 	//struct hashcode
 	key := download.Tag
 	keyNotfound := key_prefix + key
 	//如果不存在此图像 直接返回404
-	if redis.Client.Exists(keyNotfound).Val() > 0 {
+	if redis.Client.Exists(ctx, keyNotfound).Val() > 0 {
 		return getDefaultImag(), types.ErrNotFound
 	}
 	//从缓存中获取图像
-	blob, err = redis.Client.Get(key).Bytes()
+	blob, err = redis.Client.Get(ctx, key).Bytes()
 	if blob == nil {
 		if download.Format == "webp" {
 			blob, err = readFileWebp(download.Context, download.Path)
@@ -221,12 +223,12 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		if blob == nil || err != nil {
 			// read image from local hard driver
 			if blob, err = readFile(download.Context, download.Path); err != nil {
-				redis.Client.Set(keyNotfound, byte('0'), conf.Config.Redis.Expiration)
+				redis.Client.Set(ctx, keyNotfound, byte('0'), conf.Config.Redis.Expiration)
 				return getDefaultImag(), types.ErrNotFound
 			}
 		}
 		if blob != nil && !download.HasParams && download.Format == "webp" {
-			if err = redis.Client.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+			if err = redis.Client.Set(ctx, key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 				return getDefaultImag(), types.ErrorOf(err)
 			}
 			return &blob, nil
@@ -303,7 +305,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		//mw.SetAntialias(download.Antialias)
 		mw.StripImage()
 		blob = mw.GetImageBlob()
-		if err = redis.Client.Set(key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
+		if err = redis.Client.Set(ctx, key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 			return &blob, types.ErrorOf(err)
 		}
 	}

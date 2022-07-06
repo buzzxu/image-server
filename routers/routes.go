@@ -1,9 +1,12 @@
 package routers
 
 import (
+	"github.com/buzzxu/boys/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"image-server/pkg/conf"
+	"net/http"
+	"time"
 )
 
 func Register(echo *echo.Echo) {
@@ -28,6 +31,20 @@ var cors = middleware.CORSWithConfig(middleware.CORSConfig{
 	AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
 })
+
+var rateLimiter = middleware.RateLimiterConfig{
+	Skipper: middleware.DefaultSkipper,
+	Store: middleware.NewRateLimiterMemoryStoreWithConfig(
+		middleware.RateLimiterMemoryStoreConfig{
+			Rate: 10, Burst: 30, ExpiresIn: 3 * time.Minute},
+	),
+	ErrorHandler: func(context echo.Context, err error) error {
+		return context.JSON(http.StatusForbidden, types.Result{Code: http.StatusForbidden, Message: "未授权操作"})
+	},
+	DenyHandler: func(context echo.Context, identifier string, err error) error {
+		return context.JSON(http.StatusTooManyRequests, types.Result{Code: http.StatusTooManyRequests, Message: "已被限流，请稍后尝试"})
+	},
+}
 
 func boss(group *echo.Group) {
 	group.Use(cors, jwt)

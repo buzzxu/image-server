@@ -1,7 +1,8 @@
 package redis
 
 import (
-	"github.com/go-redis/redis/v7"
+	"context"
+	"github.com/go-redis/redis/v8"
 	"image-server/pkg/conf"
 	"log"
 	"time"
@@ -26,7 +27,7 @@ func RedisConnect() {
 		WriteTimeout: 500 * time.Millisecond,
 		IdleTimeout:  60 * time.Second,
 	})
-	if _, err := Client.Ping().Result(); err != nil {
+	if _, err := Client.Ping(context.Background()).Result(); err != nil {
 		log.Fatalf("Redis connect error.%s", err.Error())
 	}
 	log.Printf("Redis connect success")

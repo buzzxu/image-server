@@ -123,3 +123,7 @@ func Composite(mgw *imagick.MagickWand, blob *[]byte, x, y int) error {
 	source.ReadImageBlob(*blob)
 	return mgw.CompositeImage(source, imagick.COMPOSITE_OP_SRC_IN, true, x, y)
 }
+
+func Convert(mgw *imagick.MagickWand) {
+
+}
