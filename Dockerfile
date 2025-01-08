@@ -16,7 +16,7 @@ ENV GOPROXY=https://goproxy.io
 RUN apt-get update && \
     apt-get install -y wget build-essential pkg-config --no-install-recommends
 
-RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev libltdl-dev --no-install-recommends;
+RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev libltdl-dev libmagickwand-dev --no-install-recommends;
 
 RUN cd && \
     	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
@@ -70,7 +70,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
-    libgif-dev libx11-dev --no-install-recommends && \
+    libgif-dev libx11-dev libmagickwand-dev --no-install-recommends && \
 #    cd /tmp && \
 #    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
 #    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
