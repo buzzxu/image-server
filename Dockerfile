@@ -60,9 +60,7 @@ FROM debian:bookworm-slim
 
 MAINTAINER buzzxu <downloadxu@163.com>
 
-WORKDIR /app
-COPY --from=build /opt/app /app
-COPY --from=build /root/ImageMagick.tar.gz /tmp/ImageMagick.tar.gz
+
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -85,7 +83,7 @@ RUN apt-get update && \
 
 # Copy application and necessary files
 COPY --from=builder /usr/lib/libMagick* /usr/lib/
-COPY --from=builder /usr/lib/ImageMagick* /usr/lib/ImageMagick
+COPY --from=builder /usr/lib/ImageMagick /usr/lib/ImageMagick
 COPY --from=builder /build/app /app/
 COPY docker/conf.yml /app/
 COPY docker/run.sh /app/
@@ -99,6 +97,9 @@ ENV TZ=Asia/Shanghai \
     LANG=C.UTF-8 \
     LD_LIBRARY_PATH="/usr/lib"
 
+WORKDIR /app
+
 EXPOSE 3000
+
 ENTRYPOINT ["/bin/bash","run.sh"]
 
