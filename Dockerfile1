@@ -1,7 +1,9 @@
 # Build stage for ImageMagick
-FROM debian:bookworm-slim as imagemagick-builder
+FROM golang:bookworm as builder
 
-# Install build dependencies
+WORKDIR /build
+
+# Install ImageMagick development packages first
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         wget \
@@ -12,11 +14,16 @@ RUN apt-get update && \
         libtiff-dev \
         libwebp-dev \
         libgif-dev \
-        libx11-dev && \
+        libx11-dev \
+        libmagickwand-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Install ImageMagick from source with optimized configuration
-ARG IMAGEMAGICK_VERSION=7.1.1-29
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Install ImageMagick from source
+ARG IMAGEMAGICK_VERSION=7.1.1-43
 RUN cd /tmp && \
     wget https://www.imagemagick.org/download/ImageMagick-${IMAGEMAGICK_VERSION}.tar.gz && \
     tar -xvf ImageMagick-${IMAGEMAGICK_VERSION}.tar.gz && \
@@ -29,49 +36,36 @@ RUN cd /tmp && \
         --without-perl \
         --disable-openmp \
         --with-gvc=no \
-        --disable-docs \
-        --without-x \
-        --disable-deprecated && \
+        --disable-docs && \
     make -j$(nproc) && \
     make install && \
     ldconfig
 
-# Go build stage
-FROM golang:1.21-bookworm as builder
+# Verify ImageMagick installation and header files
+RUN ls -la /usr/include/ImageMagick-7
+RUN pkg-config --cflags --libs MagickWand
 
-WORKDIR /build
-
-# Copy go mod files first for better cache utilization
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy ImageMagick files from previous stage
-COPY --from=imagemagick-builder /usr/lib /usr/lib
-COPY --from=imagemagick-builder /usr/include /usr/include
-COPY --from=imagemagick-builder /usr/bin /usr/bin
-RUN ldconfig
-
-# Set build environment variables
+# Set environment variables for CGO
 ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
-    CGO_CFLAGS="-I/usr/include/ImageMagick-7" \
-    CGO_LDFLAGS="-L/usr/lib -lMagickWand-7.Q16HDRI -lMagickCore-7.Q16HDRI" \
-    CGO_CFLAGS_ALLOW='-Xpreprocessor'
+    CGO_CFLAGS="`pkg-config --cflags MagickWand`" \
+    CGO_LDFLAGS="`pkg-config --libs MagickWand`" \
+    CGO_CFLAGS_ALLOW='-Xpreprocessor' \
+    LD_LIBRARY_PATH="/usr/lib"
 
 # Copy source code
 COPY . .
 
-# Build the application with optimizations
-RUN go build -ldflags="-w -s" -o app
+# Build the application
+RUN go mod tidy && \
+    go install -tags no_pkgconfig gopkg.in/gographics/imagick.v3/imagick && \
+    go build -o app
 
 # Final stage
 FROM debian:bookworm-slim
 
 LABEL maintainer="buzzxu <downloadxu@163.com>"
 
-# Create non-root user
-RUN useradd -r -u 1001 -g root appuser
-
-# Install runtime dependencies only
+# Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         fontconfig \
@@ -81,39 +75,31 @@ RUN apt-get update && \
         libwebp7 \
         libgif7 \
         libx11-6 \
-        ca-certificates && \
+        libmagickwand-6.q16 && \
     rm -rf /var/lib/apt/lists/* && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
-    mkdir -p /data/images /app && \
-    chown -R appuser:root /app /data/images && \
-    chmod -R g=u /app /data/images
+    mkdir -p /data/images /app
 
-# Copy ImageMagick libraries
-COPY --from=imagemagick-builder /usr/lib/libMagick* /usr/lib/
-COPY --from=imagemagick-builder /usr/lib/ImageMagick-7.1 /usr/lib/ImageMagick-7.1
+# Copy application and necessary files
+COPY --from=builder /usr/lib/libMagick* /usr/lib/
+COPY --from=builder /usr/lib/ImageMagick-7.1 /usr/lib/ImageMagick-7.1
+COPY --from=builder /build/app /app/
+COPY docker/conf.yml /app/
+COPY docker/run.sh /app/
+COPY docker/default.png /data/images/
+COPY assets/msyh.ttf /app/
+
+# Update library cache
 RUN ldconfig
-
-# Copy application files
-COPY --from=builder --chown=appuser:root /build/app /app/
-COPY --chown=appuser:root docker/conf.yml /app/
-COPY --chown=appuser:root docker/run.sh /app/
-COPY --chown=appuser:root docker/default.png /data/images/
-COPY --chown=appuser:root assets/msyh.ttf /app/
 
 # Set environment variables
 ENV TZ=Asia/Shanghai \
     LANG=C.UTF-8 \
-    PATH="/app:$PATH"
-
-# Switch to non-root user
-USER appuser
+    LD_LIBRARY_PATH="/usr/lib"
 
 WORKDIR /app
 
 EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:3000/health || exit 1
 
 ENTRYPOINT ["/bin/bash", "run.sh"]
