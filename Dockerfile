@@ -66,7 +66,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommend \
+    apt-get install -y --no-install-recommends \
     wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg62-turbo libpng16-16 libjpeg-dev libpng-dev libtiff5 libtiff-dev libwebp7 libwebp-dev \
     libgif7 libgif-dev libx11-6 libx11-dev libmagickwand-6.q16-6 && \
