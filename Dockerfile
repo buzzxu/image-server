@@ -66,19 +66,16 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    wget pkg-config fontconfig libjemalloc2 \
-    libjpeg62-turbo libpng16-16 libjpeg-dev libpng-dev libtiff5 libtiff-dev libwebp7 libwebp-dev \
-    libgif7 libgif-dev libx11-6 libx11-dev libgomp1 && \
-	rm /etc/localtime && \
+    fontconfig libjemalloc2 \
+    libjpeg62-turbo libpng16-16  libtiff5 libwebp7 libwebp-dev \
+    libgif7 libx11-6 libgomp1 && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
-    mkdir -p /data/images && \
-    apt-get remove --purge -y wget build-essential pkg-config && \
+    mkdir -p /data/images /app && \
     apt-get clean && \
     apt-get autoremove -y && \
     apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/*
+    rm -rf /var/lib/apt/lists/*
 
 # Copy application and necessary files
 COPY --from=builder /usr/lib/libMagick* /usr/lib/
