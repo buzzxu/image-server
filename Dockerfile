@@ -16,7 +16,7 @@ ENV GOPROXY=https://goproxy.io
 RUN apt-get update && \
     apt-get install -y wget build-essential pkg-config --no-install-recommends
 
-RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev --no-install-recommends;
+RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev libltdl-dev --no-install-recommends;
 
 RUN cd && \
     	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
