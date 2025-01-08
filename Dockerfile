@@ -1,7 +1,7 @@
 FROM golang:bookworm as build
 
-WORKDIR $GOPATH/src/image-server
-ADD . $GOPATH/src/image-server
+WORKDIR /build
+
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.io
 
@@ -49,9 +49,12 @@ ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
     CGO_CFLAGS_ALLOW='-Xpreprocessor' \
     LD_LIBRARY_PATH="/usr/lib"
 
-RUN cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick && \
-        go build -o app && \
-        mv app  /opt/app
+COPY . .
+
+RUN go mod tidy && \
+    go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick && \
+    go build -o app && \
+    mv app  /opt/app
 
 FROM debian:bookworm-slim
 
@@ -65,21 +68,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
-    libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
-    libgif-dev libx11-dev --no-install-recommends libmagickwand-dev && \
-    cd  /tmp && \
-	tar -xvf ImageMagick.tar.gz && \
-	cd ImageMagick* && \
-	./configure --prefix=/usr \
-	    --without-magick-plus-plus \
-	    --without-perl \
-	    --with-jemalloc \
-	    --disable-openmp \
-	    --with-gvc=no \
-	    --disable-docs && \
-	make -j$(nproc) && make install && \
-	ldconfig /usr/local/lib && \
+    apt-get install -y --no-install-recommend \
+    wget build-essential pkg-config fontconfig libjemalloc-dev \
+    libjpeg62-turbo libpng16-16 libjpeg-dev libpng-dev libtiff5 libtiff-dev libwebp7 libwebp-dev \
+    libgif7 libgif-dev libx11-6 libx11-dev libmagickwand-6.q16-6 && \
 	rm /etc/localtime && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
@@ -91,13 +83,21 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
 
-ADD docker/conf.yml /app/conf.yml
-ADD docker/run.sh /app/run.sh
-ADD docker/default.png /data/images
-ADD assets/msyh.ttf /app/msyh.ttf
+# Copy application and necessary files
+COPY --from=builder /usr/lib/libMagick* /usr/lib/
+COPY --from=builder /usr/lib/ImageMagick* /usr/lib/ImageMagick
+COPY --from=builder /build/app /app/
+COPY docker/conf.yml /app/
+COPY docker/run.sh /app/
+COPY docker/default.png /data/images/
+COPY assets/msyh.ttf /app/
 
-ENV TZ Asia/Shanghai
-ENV LANG C.UTF-8
+RUN ldconfig
+
+# Set environment variables
+ENV TZ=Asia/Shanghai \
+    LANG=C.UTF-8 \
+    LD_LIBRARY_PATH="/usr/lib"
 
 EXPOSE 3000
 ENTRYPOINT ["/bin/bash","run.sh"]
