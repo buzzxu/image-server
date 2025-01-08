@@ -66,9 +66,14 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    fontconfig libjemalloc2 \
-    libjpeg62-turbo libpng16-16  libtiff5 libwebp7 libwebp-dev \
-    libgif7 libx11-6 libgomp1 && \
+    fontconfig \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libtiff5 \
+    libwebp \
+    libgif7 \
+    libx11-6 \
+    libgomp1 && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
     mkdir -p /data/images /app && \
