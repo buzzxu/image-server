@@ -65,11 +65,10 @@ MAINTAINER buzzxu <downloadxu@163.com>
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
-    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    wget build-essential pkg-config fontconfig libjemalloc-dev \
+    wget pkg-config fontconfig libjemalloc2 \
     libjpeg62-turbo libpng16-16 libjpeg-dev libpng-dev libtiff5 libtiff-dev libwebp7 libwebp-dev \
-    libgif7 libgif-dev libx11-6 libx11-dev libmagickwand-6.q16-6 && \
+    libgif7 libgif-dev libx11-6 libx11-dev libgomp1 && \
 	rm /etc/localtime && \
     ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
