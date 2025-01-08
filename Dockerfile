@@ -30,19 +30,16 @@ RUN cd && \
     	    --disable-docs && \
     	pwd && \
     	make -j$(nproc) && make install && \
-    	ldconfig /usr/local/lib && \
-    export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
-    export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
-    export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
-#    export CGO_ENABLED=0 GOOS=linux GOARCH=amd64; \
-#    export CGO_LDFLAGS="\
-#    -Wl,-Bstatic \
-#        `pkg-config --libs MagickWand MagickCore` \
-#         -ljbig -ltiff -ljpeg -lwebp -llzma -lfftw3 -lbz2 -lgomp \
-#    -Wl,-Bdynamic \
-#        -llcms2 -llqr-1 -lglib-2.0 -lpng12 -lxml2 -lz -lm -ldl \
-#    "; \
-    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
+    	ldconfig /usr/local/lib
+
+# Set environment variables for CGO
+ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
+    CGO_CFLAGS="`pkg-config --cflags MagickWand`" \
+    CGO_LDFLAGS="`pkg-config --libs MagickWand`" \
+    CGO_CFLAGS_ALLOW='-Xpreprocessor' \
+    LD_LIBRARY_PATH="/usr/local/lib"
+
+RUN rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
     cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
     go build -o app; \
     mv app  /opt/app;
