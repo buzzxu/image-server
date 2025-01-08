@@ -54,7 +54,6 @@ MAINTAINER buzzxu <downloadxu@163.com>
 
 WORKDIR /app
 COPY --from=build /opt/app /app
-COPY --form=build /root/ImageMagick.tar.gz /tmp/ImageMagick.tar.gz
 COPY --from=build /root/ImageMagick.tar.gz /tmp/ImageMagick.tar.gz
 
 ENV DEBIAN_FRONTEND noninteractive
