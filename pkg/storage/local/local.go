@@ -135,7 +135,7 @@ func getDefaultImag() *[]byte {
 	return &blob
 }
 
-//删除图片
+// 删除图片
 func delLocalHard(file string, context context.Context, logger echo.Logger, wg *sync.WaitGroup) {
 	defer func() {
 		wg.Done()
@@ -198,7 +198,7 @@ func loadDefaultImg() {
 	}
 }
 
-//获取图片
+// 获取图片
 func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 	var (
 		blob []byte
@@ -304,7 +304,7 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 		//平滑度
 		//mw.SetAntialias(download.Antialias)
 		mw.StripImage()
-		blob = mw.GetImageBlob()
+		blob, err = mw.GetImageBlob()
 		if err = redis.Client.Set(ctx, key, blob, conf.Config.Redis.Expiration).Err(); err != nil {
 			return &blob, types.ErrorOf(err)
 		}
@@ -313,8 +313,11 @@ func loadImageFromHardDrive(download *storage.Download) (*[]byte, error) {
 }
 func generatorImage(blob *[]byte, fileName string, extension string, resize string, mw *imagick.MagickWand) (string, error) {
 	nfs := utils.FileNameNewExt(fileName, extension)
-	mw.ReadImageBlob(*blob)
-	err := imagemagick.Resize(mw, resize)
+	err := mw.ReadImageBlob(*blob)
+	if err != nil {
+		return "", err
+	}
+	err = imagemagick.Resize(mw, resize)
 	if err != nil {
 		return "", err
 	}
@@ -364,7 +367,8 @@ func storeFile(filename string, blob *[]byte) error {
 	return ioutil.WriteFile(filepath.Join(conf.Config.Storage, filename), *blob, 0666)
 }
 
-/**
+/*
+*
 读取文件
 */
 func readFile(ctx context.Context, filename string) ([]byte, error) {
