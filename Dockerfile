@@ -16,7 +16,8 @@ RUN apt-get update && \
     libtiff-dev \
     libwebp-dev \
     libgif-dev \
-    libx11-dev && \
+    libx11-dev \
+    libmagickwand-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN cd && \
@@ -25,6 +26,9 @@ RUN cd && \
     	tar -xvf ImageMagick.tar.gz && \
     	cd ImageMagick* && \
     	./configure --prefix=/usr \
+            --enable-shared \
+            --disable-static \
+            --with-modules \
     	    --without-magick-plus-plus \
     	    --without-perl \
     	    --disable-openmp \
@@ -55,17 +59,8 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
-    libgif-dev libx11-dev --no-install-recommends && \
-#    cd /tmp && \
-#    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
-#    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
-#    cd jemalloc-4.5.0/ && \
-#    ./configure --prefix=/usr/local/jemalloc && \
-#    make -j$(nproc) && make install && \
-#    echo /usr/local/jemalloc/lib >> /etc/ld.so.conf && \
-#    ldconfig  && \
+    libgif-dev libx11-dev --no-install-recommends libmagickwand-dev && \
     cd  /tmp && \
-#	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
 	tar -xvf ImageMagick.tar.gz && \
 	cd ImageMagick* && \
 	./configure --prefix=/usr \
