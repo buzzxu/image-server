@@ -20,7 +20,6 @@ RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev
 
 RUN cd && \
         pkg-config --cflags --libs MagickWand && \
-        export CGO_CFLAGS_ALLOW='-Xpreprocessor' && \
     	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
     	tar -xvf ImageMagick.tar.gz && \
     	cd ImageMagick* && \
