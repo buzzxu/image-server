@@ -5,18 +5,19 @@ ADD . $GOPATH/src/image-server
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.io
 
-#RUN apt-get update && apt install -y apt-transport-https ca-certificates curl
-#RUN echo \
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free\
-#    > /etc/apt/sources.list
-
+# Install build dependencies
 RUN apt-get update && \
-    apt-get install -y wget build-essential pkg-config --no-install-recommends
-
-RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev --no-install-recommends;
+    apt-get install -y --no-install-recommends \
+    wget \
+    build-essential \
+    pkg-config \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libwebp-dev \
+    libgif-dev \
+    libx11-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN cd && \
         pkg-config --cflags --libs MagickWand && \
@@ -34,18 +35,10 @@ RUN cd && \
     export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
     export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
     export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
-#    export CGO_ENABLED=0 GOOS=linux GOARCH=amd64; \
-#    export CGO_LDFLAGS="\
-#    -Wl,-Bstatic \
-#        `pkg-config --libs MagickWand MagickCore` \
-#         -ljbig -ltiff -ljpeg -lwebp -llzma -lfftw3 -lbz2 -lgomp \
-#    -Wl,-Bdynamic \
-#        -llcms2 -llqr-1 -lglib-2.0 -lpng12 -lxml2 -lz -lm -ldl \
-#    "; \
-    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
-    cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
-    go build -o app; \
-    mv app  /opt/app;
+    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3 && \
+    cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick && \
+    go build -o app && \
+    mv app  /opt/app
 
 
 FROM debian:bookworm-slim
@@ -57,14 +50,6 @@ COPY --from=build /opt/app /app
 COPY --from=build /root/ImageMagick.tar.gz /tmp/ImageMagick.tar.gz
 
 ENV DEBIAN_FRONTEND noninteractive
-
-#RUN apt-get update && apt install -y apt-transport-https ca-certificates curl
-#RUN echo \
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free\
-#    deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free\
-#    > /etc/apt/sources.list
 
 RUN apt-get update && \
     apt-get upgrade -y && \
