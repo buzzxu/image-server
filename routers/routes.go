@@ -2,6 +2,7 @@ package routers
 
 import (
 	"github.com/buzzxu/boys/types"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"image-server/pkg/conf"
@@ -22,7 +23,7 @@ func Register(echo *echo.Echo) {
 	funs(qrCodeGroup)
 }
 
-var jwt = middleware.JWTWithConfig(middleware.JWTConfig{
+var jwt = echojwt.JWT(echojwt.Config{
 	SigningKey:    []byte(conf.Config.JWT.Secret),
 	SigningMethod: conf.Config.JWT.Algorithm,
 })
