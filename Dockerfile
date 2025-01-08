@@ -16,33 +16,34 @@ ENV GOPROXY=https://goproxy.io
 RUN apt-get update && \
     apt-get install -y wget build-essential pkg-config --no-install-recommends
 
-RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev libltdl-dev libmagickwand-dev --no-install-recommends;
+RUN apt install -y  -q libjpeg-dev libpng-dev libtiff-dev libwebp-dev libgif-dev libx11-dev --no-install-recommends;
 
 RUN cd && \
     	wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
     	tar -xvf ImageMagick.tar.gz && \
     	cd ImageMagick* && \
     	./configure --prefix=/usr \
-            --enable-shared \
-            --disable-static \
-            --with-modules \
     	    --without-magick-plus-plus \
     	    --without-perl \
     	    --disable-openmp \
     	    --with-gvc=no \
+            --without-modules \
+            --disable-opencl \
     	    --disable-docs && \
-    	pwd && \
     	make -j$(nproc) && make install && \
-    	ldconfig
-
-# Set environment variables for CGO
-ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
-    CGO_CFLAGS="`pkg-config --cflags MagickWand`" \
-    CGO_LDFLAGS="`pkg-config --libs MagickWand`" \
-    CGO_CFLAGS_ALLOW='-Xpreprocessor' \
-    LD_LIBRARY_PATH="/usr/lib"
-
-RUN rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
+    	ldconfig /usr/local/lib && \
+    export CGO_CFLAGS="-I`pkg-config --cflags MagickWand`"; \
+    export CGO_LDFLAGS="-I`pkg-config --libs MagickWand`"; \
+    export CGO_CFLAGS_ALLOW='-Xpreprocessor'; \
+#    export CGO_ENABLED=0 GOOS=linux GOARCH=amd64; \
+#    export CGO_LDFLAGS="\
+#    -Wl,-Bstatic \
+#        `pkg-config --libs MagickWand MagickCore` \
+#         -ljbig -ltiff -ljpeg -lwebp -llzma -lfftw3 -lbz2 -lgomp \
+#    -Wl,-Bdynamic \
+#        -llcms2 -llqr-1 -lglib-2.0 -lpng12 -lxml2 -lz -lm -ldl \
+#    "; \
+    rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
     cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
     go build -o app; \
     mv app  /opt/app;
@@ -70,7 +71,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y wget build-essential pkg-config fontconfig libjemalloc-dev \
     libjpeg-dev libpng-dev libtiff-dev libwebp-dev \
-    libgif-dev libx11-dev libmagickwand-dev --no-install-recommends && \
+    libgif-dev libx11-dev --no-install-recommends && \
 #    cd /tmp && \
 #    wget https://github.com/jemalloc/jemalloc/releases/download/4.5.0/jemalloc-4.5.0.tar.bz2 && \
 #    tar -xjvf jemalloc-4.5.0.tar.bz2 && \
@@ -89,6 +90,8 @@ RUN apt-get update && \
 	    --with-jemalloc \
 	    --disable-openmp \
 	    --with-gvc=no \
+        --without-modules \
+        --disable-opencl \
 	    --disable-docs && \
 	make -j$(nproc) && make install && \
 	ldconfig /usr/local/lib && \
@@ -113,5 +116,4 @@ ENV LANG C.UTF-8
 
 EXPOSE 3000
 ENTRYPOINT ["/bin/bash","run.sh"]
-
 
