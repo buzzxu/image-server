@@ -40,7 +40,7 @@ ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
     CGO_CFLAGS="`pkg-config --cflags MagickWand`" \
     CGO_LDFLAGS="`pkg-config --libs MagickWand`" \
     CGO_CFLAGS_ALLOW='-Xpreprocessor' \
-    LD_LIBRARY_PATH="/usr//lib"
+    LD_LIBRARY_PATH="/usr/lib"
 
 RUN rm -rf $GOPATH/pkg/linux_amd64/gopkg.in/gographics/imagick.v3; \
     cd $GOPATH/src/image-server && go install -tags no_pkgconfig -v gopkg.in/gographics/imagick.v3/imagick; \
