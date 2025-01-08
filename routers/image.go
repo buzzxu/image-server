@@ -41,11 +41,20 @@ func upload(c echo.Context) error {
 	if !exists && c.FormValue("base64") == "" {
 		return E(c, types.NewHttpError(http.StatusBadRequest, "file or base64 is nil"))
 	}
+	_rename := c.FormValue("rename")
 	var (
 		blobs     []*[]byte
 		fileNames []string
 	)
-	rename := true
+	var rename bool
+	if _rename == "" {
+		rename = true
+	} else {
+		rename, err = strconv.ParseBool(_rename)
+		if err != nil {
+			rename = true
+		}
+	}
 	if files != nil {
 		blobs = make([]*[]byte, len(files))
 		fileNames = make([]string, len(files))

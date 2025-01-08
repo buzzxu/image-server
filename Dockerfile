@@ -1,4 +1,4 @@
-FROM golang:buster as build
+FROM golang:bookworm as build
 
 WORKDIR $GOPATH/src/image-server
 ADD . $GOPATH/src/image-server
@@ -47,7 +47,7 @@ RUN cd && \
     mv app  /opt/app;
 
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 MAINTAINER buzzxu <downloadxu@163.com>
 
