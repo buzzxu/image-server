@@ -25,7 +25,7 @@ func init() {
 	imagick.Initialize()
 }
 
-//裁剪
+// 裁剪
 func Crop(blob *[]byte, crops *[]CropParam) ([]string, error) {
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
@@ -42,13 +42,19 @@ func Crop(blob *[]byte, crops *[]CropParam) ([]string, error) {
 		if error != nil {
 			return nil, error
 		}
-		data[i] = prefix + base64.StdEncoding.EncodeToString(mw.GetImageBlob())
+		_blob, err := mw.GetImageBlob()
+		if err != nil {
+			return nil, err
+		} else {
+			data[i] = prefix + base64.StdEncoding.EncodeToString(_blob)
+		}
+
 		mw.Clear()
 	}
 	return data, nil
 }
 
-//合成
+// 合成
 func Composite0(width, height uint, composite *CompositeParam) (*[]byte, error) {
 	mw := imagick.NewMagickWand()
 	pw := imagick.NewPixelWand()
@@ -87,7 +93,7 @@ func Composite0(width, height uint, composite *CompositeParam) (*[]byte, error) 
 	return nil, nil
 }
 
-//合成
+// 合成
 func Composite(composites []CompositeParam) (*[]byte, error) {
 	var (
 		w = 0
