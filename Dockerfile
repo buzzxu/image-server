@@ -70,7 +70,7 @@ RUN apt-get update && \
     libjpeg62-turbo \
     libpng16-16 \
     libtiff5 \
-    libwebp \
+    webp libwebp-dev \
     libgif7 \
     libx11-6 \
     libgomp1 && \
