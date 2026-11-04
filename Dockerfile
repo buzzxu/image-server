@@ -1,5 +1,5 @@
 # Build stage for ImageMagick
-FROM golang:bookworm as builder
+FROM golang:1.27.3-bookworm as builder
 
 WORKDIR /build
 
